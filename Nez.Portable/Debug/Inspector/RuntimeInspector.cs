@@ -73,6 +73,7 @@ namespace Nez
 			{
 				// update transform, which has a null Component
 				GetOrCreateInspectorList((Component) null).Update();
+				GetOrCreateInspectorList(_entity).Update();
 
 				for (var i = 0; i < _entity.Components.Count; i++)
 					GetOrCreateInspectorList(_entity.Components[i]).Update();
