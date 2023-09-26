@@ -365,6 +365,11 @@ namespace Nez.UI
 			var color = ColorExt.Create(this.color, (int)(this.color.A * parentAlpha));
 			_style.Background?.Draw(batcher, x, y, width == 0 ? _prefSize.X : width, height, color);
 
+			if (_style.DropShadowColor != null)
+			{
+				batcher.DrawString(_style.Font, _wrappedString, new Vector2(x, y) + _textPosition + new Vector2(2, 2),
+					_style.DropShadowColor, 0, Vector2.Zero, new Vector2(_style.FontScaleX, _style.FontScaleY), SpriteEffects.None, 0);
+			}
 			batcher.DrawString(_style.Font, _wrappedString, new Vector2(x, y) + _textPosition,
 				_style.FontColor, 0, Vector2.Zero, new Vector2(_style.FontScaleX, _style.FontScaleY), SpriteEffects.None, 0);
 		}
@@ -377,6 +382,7 @@ namespace Nez.UI
 	public class LabelStyle
 	{
 		public Color FontColor = Color.White;
+		public Color DropShadowColor;
 		public BitmapFont Font;
 		public IDrawable Background;
 		public float FontScaleX = 1f;

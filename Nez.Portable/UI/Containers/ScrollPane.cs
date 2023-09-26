@@ -52,6 +52,8 @@ namespace Nez.UI
 		Vector2 _lastMousePos;
 		float _lastHandlePosition;
 
+		private bool hovering = false;
+		public bool Hovering => hovering;
 
 		public ScrollPane(Element widget) : this(widget, new ScrollPaneStyle())
 		{
@@ -370,12 +372,14 @@ namespace Nez.UI
 		void IInputListener.OnMouseEnter()
 		{
 			ResetFade();
+			hovering = true;
 		}
 
 
 		void IInputListener.OnMouseExit()
 		{
 			ResetFade();
+			hovering = false;
 		}
 
 
