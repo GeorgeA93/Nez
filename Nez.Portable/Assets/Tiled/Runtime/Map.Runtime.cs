@@ -106,6 +106,11 @@ namespace Nez.Tiled
 			);
 		}
 
+		public Vector2 WorldToTilePositionFloat(Vector2 pos, bool clampToTilemapBounds = true)
+		{
+			return IsometricWorldToTilePositionFloat(pos, clampToTilemapBounds);
+		}
+
 		/// <summary>
 		/// converts from world to tile position clamping to the tilemap bounds
 		/// </summary>
@@ -365,6 +370,11 @@ namespace Nez.Tiled
 			return IsometricWorldToTilePosition(pos.X, pos.Y, clampToTilemapBounds);
 		}
 
+		private Vector2 IsometricWorldToTilePositionFloat(Vector2 pos, bool clampToTilemapBounds = true)
+		{
+			return IsometricWorldToTilePositionFloat(pos.X, pos.Y, clampToTilemapBounds);
+		}
+
 		/// <summary>
 		/// converts from world to tile position for isometric map clamping to the tilemap bounds
 		/// </summary>
@@ -379,6 +389,16 @@ namespace Nez.Tiled
 			if (!clampToTilemapBounds)
 				return new Point(tileX, tileY);
 			return new Point(Mathf.Clamp(tileX, 0, Width - 1), Mathf.Clamp(tileY, 0, Height - 1));
+		}
+
+		private Vector2 IsometricWorldToTilePositionFloat(float x, float y, bool clampToTilemapBounds = true)
+		{
+			x -= (Height - 1) * TileWidth / 2;
+			float tileX = Mathf.RoundToNearest((y / TileHeight) + (x / TileWidth), 0.5f);
+			float tileY = Mathf.RoundToNearest((-x / TileWidth) + (y / TileHeight), 0.5f);
+			if (!clampToTilemapBounds)
+				return new Vector2(tileX, tileY);
+			return new Vector2(Mathf.Clamp(tileX, 0, Width - 1), Mathf.Clamp(tileY, 0, Height - 1));
 		}
 
 		/// converts from isometric tile to world position
