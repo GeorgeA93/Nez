@@ -6,6 +6,8 @@
 [![Join the chat](https://img.shields.io/badge/discord-join-7289DA.svg?logo=discord&longCache=true&style=flat)](https://discord.gg/uFtGHNv)
 [![Website](https://img.shields.io/website?url=https%3A%2F%2Fprime31.github.io%2FNez%2F)](https://prime31.github.io/Nez/)
 
+> See partial zh-cn translation at [README.cn.md](./README.cn.md) 部分中文翻译见 [README.cn.md](./README.cn.md)
+
 Nez aims to be a feature-rich 2D framework that sits on top of MonoGame/FNA. It provides a solid base for you to build a 2D game on. Some of the many features it includes are:
 
 - Scene/Entity/Component system with Component render layer tracking
@@ -88,6 +90,7 @@ Samples Repository
 ==========
 You can find the samples repo [here](https://github.com/prime31/Nez-Samples). It contains a variety of sample scenes that demonstrate the basics of getting stuff done with Nez. [This YouTube playlist](https://www.youtube.com/playlist?list=PLb8LPjN5zpx0ZerxdoVarLKlWJ1_-YD9M) also has a few relevant videos.
 
+For reference, you can also access Nez's documentation [here](https://prime31.github.io/Nez/).
 
 
 Using Nez with FNA
