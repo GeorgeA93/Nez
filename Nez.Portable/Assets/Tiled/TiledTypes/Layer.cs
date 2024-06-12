@@ -27,21 +27,17 @@ namespace Nez.Tiled
 		/// height in tiles for this layer. Always the same as the map height for fixed-size maps.
 		/// </summary>
 		public int Height;
-		public TmxLayerTile[] Tiles;
-
+		public uint[] Grid;
+		public Dictionary<uint, TmxLayerTile> Tiles;
+		
 		/// <summary>
 		/// returns the TmxLayerTile with gid. This is a slow lookup so cache it!
 		/// </summary>
 		/// <param name="gid"></param>
 		/// <returns></returns>
-		public TmxLayerTile GetTileWithGid(int gid)
-		{
-			for (var i = 0; i < Tiles.Length; i++)
-			{
-				if (Tiles[i] != null && Tiles[i].Gid == gid)
-					return Tiles[i];
-			}
-			return null;
+		public TmxLayerTile GetTileWithGid(uint gid) {
+			Tiles.TryGetValue(gid, out var result);
+			return result;
 		}
 	}
 
@@ -51,14 +47,11 @@ namespace Nez.Tiled
 		const uint FLIPPED_VERTICALLY_FLAG = 0x40000000;
 		const uint FLIPPED_DIAGONALLY_FLAG = 0x20000000;
 
-		public TmxTileset Tileset;
-		public int Gid;
-		public int X;
-		public int Y;
-		public Vector2 Position => new Vector2(X, Y);
-		public bool HorizontalFlip;
-		public bool VerticalFlip;
-		public bool DiagonalFlip;
+		public readonly TmxTileset Tileset;
+		public readonly int Gid;
+		public readonly bool HorizontalFlip;
+		public readonly bool VerticalFlip;
+		public readonly bool DiagonalFlip;
 
 		int? _tilesetTileIndex;
 
@@ -88,13 +81,9 @@ namespace Nez.Tiled
 				return Tileset.Tiles[_tilesetTileIndex.Value];
 			}
 		}
-
-		public TmxLayerTile(TmxMap map, uint id, int x, int y)
+		
+		public TmxLayerTile(TmxMap map, uint rawGid)
 		{
-			X = x;
-			Y = y;
-			var rawGid = id;
-
 			// Scan for tile flip bit flags
 			bool flip;
 			flip = (rawGid & FLIPPED_HORIZONTALLY_FLAG) != 0;
@@ -106,12 +95,39 @@ namespace Nez.Tiled
 			flip = (rawGid & FLIPPED_DIAGONALLY_FLAG) != 0;
 			DiagonalFlip = flip;
 
-			// Zero the bit flags
-			rawGid &= ~(FLIPPED_HORIZONTALLY_FLAG | FLIPPED_VERTICALLY_FLAG | FLIPPED_DIAGONALLY_FLAG);
-
-			// Save GID remainder to int
-			Gid = (int)rawGid;
+			Gid = ClearFlipFlags(rawGid);
 			Tileset = map.GetTilesetForTileGid(Gid);
+		}
+
+		/// <summary>
+		/// Applies the given flip flags to the given Global Tile ID.
+		/// </summary>
+		/// <param name="gid">Global Tile ID (without the flip flags)</param>
+		/// <param name="flipHorizontally">Horizontally flipped?</param>
+		/// <param name="flipVertically">Vertically flipped?</param>
+		/// <param name="flipDiagonally">Diagonally flipped?</param>
+		/// <returns>Global Tile ID (with the flip flags)</returns>
+		public static uint GetRawGid(int gid, bool flipHorizontally, bool flipVertically, bool flipDiagonally) 
+		{
+			if (gid == 0) return 0;
+
+			var rawGid = (uint)gid;
+
+			if (flipHorizontally) rawGid |= FLIPPED_HORIZONTALLY_FLAG;
+			if (flipVertically) rawGid |= FLIPPED_VERTICALLY_FLAG;
+			if (flipDiagonally) rawGid |= FLIPPED_DIAGONALLY_FLAG;
+
+			return rawGid;
+		}
+		
+		/// <summary>
+		/// Clears flip flags from the given Global Tile Id.
+		/// </summary>
+		/// <param name="rawGid">Global Tile ID (with the flip flags)</param>
+		/// <returns>Global Tile ID (without the flip flags)</returns>
+		public static int ClearFlipFlags(uint rawGid)
+		{
+			return (int)(rawGid & ~(FLIPPED_HORIZONTALLY_FLAG | FLIPPED_VERTICALLY_FLAG | FLIPPED_DIAGONALLY_FLAG));
 		}
 	}
 

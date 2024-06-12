@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 
@@ -5,13 +6,24 @@ namespace Nez.Tiled
 {
     public partial class TmxLayer : ITmxLayer
     {
-        /// <summary>
-		/// gets the TmxLayerTile at the x/y coordinates. Note that these are tile coordinates not world coordinates!
-		/// </summary>
-		/// <returns>The tile.</returns>
-		/// <param name="x">The x coordinate.</param>
-		/// <param name="y">The y coordinate.</param>
-		public TmxLayerTile GetTile(int x, int y) => Tiles[x + y * Width];
+
+	    /// <summary>
+	    /// gets the TmxLayerTile at the x/y coordinates. Note that these are tile coordinates not world coordinates!
+	    /// </summary>
+	    /// <returns>The tile.</returns>
+	    /// <param name="x">The x coordinate.</param>
+	    /// <param name="y">The y coordinate.</param>
+	    public TmxLayerTile GetTile(int x, int y) 
+	    {
+		    return GetTile(x + y * Width);
+	    }
+	    
+	    public TmxLayerTile GetTile(int index) 
+	    {
+		    Tiles.TryGetValue(Grid[index], out var tmxLayerTile);
+
+		    return tmxLayerTile;
+	    }
 
 		/// <summary>
 		/// gets the TmxLayerTile at the given world position
@@ -27,7 +39,7 @@ namespace Nez.Tiled
 		/// </summary>
 		public List<Rectangle> GetCollisionRectangles()
 		{
-			var checkedIndexes = new bool?[Tiles.Length];
+			var checkedIndexes = new bool?[Grid.Length];
 			var rectangles = new List<Rectangle>();
 			var startCol = -1;
 			var index = -1;
@@ -128,17 +140,47 @@ namespace Nez.Tiled
 		}
 
 		/// <summary>
-		/// sets the tile and updates its tileset. If you change a tiles gid to one in a different Tileset you must
-		/// call this method or update the TmxLayerTile.tileset manually!
+		/// sets the tile.
 		/// </summary>
 		/// <returns>The tile.</returns>
+		/// <param name="x">The x coordinate.</param>
+		/// <param name="y">The y coordinate.</param>
 		/// <param name="tile">Tile.</param>
-		public TmxLayerTile SetTile(TmxLayerTile tile)
+		[Obsolete("Please use SetTile with gid instead.")]
+		public TmxLayerTile SetTile(int x, int y, TmxLayerTile tile)
 		{
-			Tiles[tile.X + tile.Y * Width] = tile;
-			tile.Tileset = Map.GetTilesetForTileGid(tile.Gid);
+			return SetTile(x, y, tile.Gid, tile.HorizontalFlip, tile.VerticalFlip, tile.DiagonalFlip);
+		}
+		
+		/// <summary>
+		/// Sets the tile at position x, y.
+		/// </summary>
+		/// <param name="x">The x coordinate.</param>
+		/// <param name="y">The y coordinate.</param>
+		/// <param name="gid">Global Tile ID (without the flip flags)</param>
+		/// <param name="flipHorizontally">Should the tile be flipped horizontally?</param>
+		/// <param name="flipVertically">Should the tile be flipped vertically?</param>
+		/// <param name="flipDiagonally">Should the tile be flipped diagonally?</param>
+		/// <returns>The tile.</returns>
+		public TmxLayerTile SetTile(int x, int y, int gid, bool flipHorizontally = false, bool flipVertically = false, bool flipDiagonally = false)
+		{
+			if (gid == 0) return null;
+			
+			uint rawGid = TmxLayerTile.GetRawGid(gid, flipHorizontally, flipVertically, flipDiagonally);
+			
+			Grid[x + y * Width] = rawGid;
 
-			return tile;
+			TmxLayerTile tileToSet;
+
+			if (!Tiles.TryGetValue(rawGid, out var tmxLayerTile)) 
+			{
+				tileToSet = new TmxLayerTile(Map, rawGid);
+				Tiles.Add(rawGid, tileToSet);
+			}
+			else
+				tileToSet = tmxLayerTile;
+			
+			return tileToSet;
 		}
 
 		/// <summary>
@@ -146,6 +188,8 @@ namespace Nez.Tiled
 		/// </summary>
 		/// <param name="x">The x coordinate.</param>
 		/// <param name="y">The y coordinate.</param>
-		public void RemoveTile(int x, int y) => Tiles[x + y * Width] = null;
+		public void RemoveTile(int x, int y) {
+			Grid[x + y * Width] = 0;
+		}
     }
 }

@@ -20,8 +20,10 @@ namespace Nez.Tiled
 		/// <param name="cameraClipBounds"></param>
 		public static void RenderMap(TmxMap map, Batcher batcher, Vector2 position, Vector2 scale, float layerDepth, RectangleF cameraClipBounds)
 		{
-			foreach (var layer in map.Layers)
+			for (var index = 0; index < map.Layers.Count; index++)
 			{
+				var layer = map.Layers[index];
+				
 				if (layer is TmxLayer tmxLayer && tmxLayer.Visible)
 					RenderLayer(tmxLayer, batcher, position, scale, layerDepth, cameraClipBounds);
 				else if (layer is TmxImageLayer tmxImageLayer && tmxImageLayer.Visible)
@@ -67,13 +69,16 @@ namespace Nez.Tiled
 			var color = Color.White;
 			color.A = (byte)(layer.Opacity * 255);
 
-			for (var i = 0; i < layer.Tiles.Length; i++)
+			for (var i = 0; i < layer.Grid.Length; i++)
 			{
-				var tile = layer.Tiles[i];
+				var tile = layer.GetTile(i);
 				if (tile == null)
 					continue;
 
-				RenderTile(tile, batcher, position,
+				var x = i % layer.Map.TileWidth;
+				var y = i / layer.Map.TileWidth;
+				
+				RenderTile(tile,x ,y, batcher, position,
 					scale, tileWidth, tileHeight,
 					color, layerDepth, layer.Map.Orientation,
 					layer.Map.Width, layer.Map.Height);
@@ -116,7 +121,7 @@ namespace Nez.Tiled
 				{
 					var tile = layer.GetTile(x, y);
 					if (tile != null)
-						RenderTile(tile, batcher, position,
+						RenderTile(tile, x ,y, batcher, position,
 							scale, tileWidth, tileHeight,
 							color, layerDepth, layer.Map.Orientation,
 							layer.Map.Width, layer.Map.Height);
@@ -178,7 +183,7 @@ namespace Nez.Tiled
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void RenderTile(TmxLayerTile tile, Batcher batcher, Vector2 position,
+		public static void RenderTile(TmxLayerTile tile, int tileX, int tileY, Batcher batcher, Vector2 position,
 				Vector2 scale, float tileWidth, float tileHeight,
 				Color color, float layerDepth, OrientationType orientation,
 				int mapWidth, int mapHeight)
@@ -200,23 +205,23 @@ namespace Nez.Tiled
 			switch (orientation)
 			{
 				case OrientationType.Hexagonal:
-					bool isEvenRow = tile.Y % 2 == 0;
+					bool isEvenRow = tileY % 2 == 0;
 
 					if (isEvenRow)
 					{
-						tx = tile.X * tileWidth;
-						ty = tile.Y * tileHeight * 0.75f;
+						tx = tileX * tileWidth;
+						ty = tileY * tileHeight * 0.75f;
 					}
 					else
 					{
-						tx = (tileWidth / 2) + (tile.X * tileWidth);
-						ty = tile.Y * tileHeight * 0.75f;
+						tx = (tileWidth / 2) + (tileX * tileWidth);
+						ty = tileY * tileHeight * 0.75f;
 					}
 
 					break;
 				case OrientationType.Isometric:
-					tx = tile.X * tileWidth / 2 - tile.Y * tileWidth / 2 + (mapHeight - 1) * tileWidth / 2;
-					ty = tile.Y * tileHeight / 2 + tile.X * tileHeight / 2;
+					tx = tileX * tileWidth / 2 - tileY * tileWidth / 2 + (mapHeight - 1) * tileWidth / 2;
+					ty = tileY * tileHeight / 2 + tileX * tileHeight / 2;
 					break;
 				case OrientationType.Staggered:
 					throw new NotImplementedException(
@@ -226,8 +231,8 @@ namespace Nez.Tiled
 				case OrientationType.Unknown:
 				case OrientationType.Orthogonal:
 				default:
-					tx = tile.X * tileWidth;
-					ty = tile.Y * tileHeight;
+					tx = tileX * tileWidth;
+					ty = tileY * tileHeight;
 					break;
 			}
 
@@ -286,8 +291,10 @@ namespace Nez.Tiled
 			if (!objGroup.Visible)
 				return;
 
-			foreach (var obj in objGroup.Objects)
+			for (var index = 0; index < objGroup.Objects.Count; index++)
 			{
+				var obj = objGroup.Objects[index];
+				
 				if (!obj.Visible)
 					continue;
 
@@ -318,8 +325,6 @@ namespace Nez.Tiled
 						batcher.DrawPixel(pos, objGroup.Color, (int)size);
 						goto default;
 					case TmxObjectType.Tile:
-						var tx = obj.Tile.X * objGroup.Map.TileWidth * scale.X;
-						var ty = obj.Tile.Y * objGroup.Map.TileHeight * scale.Y;
 
 						var spriteEffects = SpriteEffects.None;
 						if (obj.Tile.HorizontalFlip)
@@ -371,8 +376,10 @@ namespace Nez.Tiled
 			if (!group.Visible)
 				return;
 
-			foreach (var layer in group.Layers)
+			for (var index = 0; index < group.Layers.Count; index++)
 			{
+				var layer = group.Layers[index];
+				
 				if (layer is TmxGroup tmxSubGroup)
 					RenderGroup(tmxSubGroup, batcher, position, scale, layerDepth);
 
