@@ -16,7 +16,17 @@ namespace Nez
 		/// <value>The width.</value>
 		public static int Width
 		{
-			get => _graphicsManager.GraphicsDevice.PresentationParameters.BackBufferWidth;
+			get
+			{
+				if (!Core.Headless)
+				{
+					return _graphicsManager.GraphicsDevice.PresentationParameters.BackBufferWidth;
+				}
+				else
+				{
+					return Core.Instance.DefaultResolution.X;
+				}
+			}
 			set => _graphicsManager.GraphicsDevice.PresentationParameters.BackBufferWidth = value;
 		}
 
@@ -26,7 +36,17 @@ namespace Nez
 		/// <value>The height.</value>
 		public static int Height
 		{
-			get => _graphicsManager.GraphicsDevice.PresentationParameters.BackBufferHeight;
+			get
+			{
+				if (!Core.Headless)
+				{
+					return _graphicsManager.GraphicsDevice.PresentationParameters.BackBufferHeight;
+				}
+				else
+				{
+					return Core.Instance.DefaultResolution.Y;
+				}
+			}
 			set => _graphicsManager.GraphicsDevice.PresentationParameters.BackBufferHeight = value;
 		}
 

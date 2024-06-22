@@ -298,7 +298,11 @@ namespace Nez
 		{
 			Entities = new EntityList(this);
 			RenderableComponents = new RenderableComponentList();
-			Content = new NezContentManager();
+
+			if (!Core.Headless)
+			{
+				Content = new NezContentManager();
+			}
 
 			var cameraEntity = CreateEntity("camera");
 			Camera = cameraEntity.AddComponent(new Camera());
@@ -345,7 +349,12 @@ namespace Nez
 
 			// prep our render textures
 			UpdateResolutionScaler();
-			Core.GraphicsDevice.SetRenderTarget(_sceneRenderTarget);
+
+			if (!Core.Headless)
+			{
+				Core.GraphicsDevice.SetRenderTarget(_sceneRenderTarget);
+			}
+
 			Core.Emitter.AddObserver(CoreEvents.GraphicsDeviceReset, OnGraphicsDeviceReset);
 			Core.Emitter.AddObserver(CoreEvents.OrientationChanged, OnOrientationChanged);
 
@@ -386,8 +395,11 @@ namespace Nez
 
 		public virtual void Update()
 		{
-			// we set the RenderTarget here so that the Viewport will match the RenderTarget properly
-			Core.GraphicsDevice.SetRenderTarget(_sceneRenderTarget);
+			if (!Core.Headless)
+			{
+				// we set the RenderTarget here so that the Viewport will match the RenderTarget properly
+				Core.GraphicsDevice.SetRenderTarget(_sceneRenderTarget);
+			}
 
 			// update our lists in case they have any changes
 			Entities.UpdateLists();
@@ -408,6 +420,8 @@ namespace Nez
 
 		internal void Render()
 		{
+			if (Core.Headless) { return ;}
+
 			if (_renderers.Length == 0)
 			{
 				Debug.Error("There are no Renderers in the Scene!");
@@ -452,6 +466,8 @@ namespace Nez
 		/// <returns>The render.</returns>
 		internal void PostRender(RenderTarget2D finalRenderTarget = null)
 		{
+			if (Core.Headless) { return ;}
+
 			var enabledCounter = 0;
 			if (EnablePostProcessing)
 			{
@@ -545,6 +561,8 @@ namespace Nez
 
 		void UpdateResolutionScaler()
 		{
+			if (Core.Headless) { return ;}
+
 			var designSize = _designResolutionSize;
 			var screenSize = new Point(Screen.Width, Screen.Height);
 			var screenAspectRatio = (float)screenSize.X / (float)screenSize.Y;
@@ -1009,7 +1027,7 @@ namespace Nez
 
 			for (var i = 0; i < entity.Transform.ChildCount; i++)
 				AddEntity<Entity>(entity.Transform.GetChild(i).Entity);
-			
+
 			return entity;
 		}
 

@@ -10,6 +10,7 @@ using Nez.Timers;
 using Nez.BitmapFonts;
 using Nez.Textures;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Nez.ImGui")]
@@ -20,6 +21,7 @@ namespace Nez
 {
 	public class Core : Game
 	{
+		public static bool Headless { get; private set; } = false;
 		/// <summary>
 		/// core emitter. emits only Core level events.
 		/// </summary>
@@ -105,6 +107,8 @@ namespace Nez
 		CoroutineManager _coroutineManager = new CoroutineManager();
 		TimerManager _timerManager = new TimerManager();
 
+		public Point DefaultResolution;
+
 
 		/// <summary>
 		/// The currently active Scene. Note that if set, the Scene will not actually change until the end of the Update
@@ -140,34 +144,51 @@ namespace Nez
 			_instance = this;
 			Emitter = new Emitter<CoreEvents>(new CoreEventsComparer());
 
-			var graphicsManager = new GraphicsDeviceManager(this)
+			if (!Headless)
 			{
-				PreferredBackBufferWidth = width,
-				PreferredBackBufferHeight = height,
-				IsFullScreen = isFullScreen,
-				SynchronizeWithVerticalRetrace = true,
+				var graphicsManager = new GraphicsDeviceManager(this)
+				{
+					PreferredBackBufferWidth = width,
+					PreferredBackBufferHeight = height,
+					IsFullScreen = isFullScreen,
+					SynchronizeWithVerticalRetrace = true,
 #if MONOGAME_38
-				HardwareModeSwitch = hardwareModeSwitch,
-				PreferHalfPixelOffset = true
+					HardwareModeSwitch = hardwareModeSwitch,
+					PreferHalfPixelOffset = true
 #endif
-			};
-			graphicsManager.DeviceReset += OnGraphicsDeviceReset;
-			graphicsManager.PreferredDepthStencilFormat = DepthFormat.Depth24Stencil8;
+				};
+				graphicsManager.DeviceReset += OnGraphicsDeviceReset;
+				graphicsManager.PreferredDepthStencilFormat = DepthFormat.Depth24Stencil8;
 
-			Screen.Initialize(graphicsManager);
-			Window.ClientSizeChanged += OnGraphicsDeviceReset;
-			Window.OrientationChanged += OnOrientationChanged;
+				Screen.Initialize(graphicsManager);
+				Window.ClientSizeChanged += OnGraphicsDeviceReset;
+				Window.OrientationChanged += OnOrientationChanged;
 
-			base.Content.RootDirectory = contentDirectory;
-			Content = new NezGlobalContentManager(Services, base.Content.RootDirectory);
-			IsMouseVisible = true;
-			IsFixedTimeStep = false;
+				base.Content.RootDirectory = contentDirectory;
+				Content = new NezGlobalContentManager(Services, base.Content.RootDirectory);
+				IsMouseVisible = true;
+				IsFixedTimeStep = false;
+			}
+			else
+			{
+				Services.AddService(typeof(IGraphicsDeviceService), new DummyGraphicsDeviceService());
+
+				IsFixedTimeStep = true;
+			}
+
+			DefaultResolution = new Point(width, height);
 
 			// setup systems
 			RegisterGlobalManager(_coroutineManager);
 			RegisterGlobalManager(new TweenManager());
 			RegisterGlobalManager(_timerManager);
 			RegisterGlobalManager(new RenderTarget());
+		}
+
+		public static void UserHeadlessMode()
+		{
+			Sdl2.SDL_setenv("SDL_VIDEODRIVER", "dummy", overwrite: 0);
+			Headless = true;
 		}
 
 		void OnOrientationChanged(object sender, EventArgs e)
@@ -212,20 +233,27 @@ namespace Nez
 
 		protected override void Initialize()
 		{
-			base.Initialize();
+			if (!Headless)
+			{
+				base.Initialize();
 
-			// prep the default Graphics system
-			GraphicsDevice = base.GraphicsDevice;
-			var font = Content.Load<BitmapFont>("nez://Nez.Content.NezDefaultBMFont.xnb");
-			Graphics.Instance = new Graphics(font);
+				// prep the default Graphics system
+				GraphicsDevice = base.GraphicsDevice;
+				var font = Content.Load<BitmapFont>("nez://Nez.Content.NezDefaultBMFont.xnb");
+				Graphics.Instance = new Graphics(font);
+			}
 		}
 
 		protected override void Update(GameTime gameTime)
 		{
-			if (PauseOnFocusLost && !IsActive)
+			if (!Headless)
 			{
-				SuppressDraw();
-				return;
+
+				if (PauseOnFocusLost && !IsActive)
+				{
+					SuppressDraw();
+					return;
+				}
 			}
 
 			// update all our systems and global managers
@@ -270,7 +298,10 @@ namespace Nez
 				}
 			}
 
-			EndDebugUpdate();
+			if (!Headless)
+			{
+				EndDebugUpdate();
+			}
 
 #if FNA
 			// MonoGame only updates old-school XNA Components in Update which we dont care about. FNA's core FrameworkDispatcher needs
@@ -281,6 +312,8 @@ namespace Nez
 
 		protected override void Draw(GameTime gameTime)
 		{
+			if (Headless) { return; }
+
 			if (PauseOnFocusLost && !IsActive)
 				return;
 
