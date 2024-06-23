@@ -59,7 +59,10 @@ namespace Nez.Tiled
 				var tileset = ParseTmxTileset(map, e, map.TmxDirectory, contentManager);
 				map.Tilesets.Add(tileset);
 
-				UpdateMaxTileSizes(tileset);
+				if (!Core.Headless)
+				{
+					UpdateMaxTileSizes(tileset);
+				}
 			}
 
 			map.Layers = new TmxList<ITmxLayer>();
@@ -695,6 +698,11 @@ namespace Nez.Tiled
 
 			tileset.Properties = ParsePropertyDict(xTileset.Element("properties"));
 
+			if (Core.Headless)
+			{
+				return tileset;
+			}
+
 			// cache our source rects for each tile so we dont have to calculate them every time we render. If we have
 			// an image this is a normal tileset, else its an image tileset
 			tileset.TileRegions = new Dictionary<int, RectangleF>();
@@ -792,6 +800,10 @@ namespace Nez.Tiled
 				}
 				else
 				{
+					if (Core.Headless)
+					{
+						return null;
+					}
 					using (var stream = TitleContainer.OpenStream(image.Source))
 						image.Texture = Texture2D.FromStream(Core.GraphicsDevice, stream);
 				}
