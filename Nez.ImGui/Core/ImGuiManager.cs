@@ -95,7 +95,12 @@ namespace Nez.ImGuiTools
 				_drawCommands[i]();
 
 			for (var i = _toolWindows.Count - 1; i >= 0; i--)
-				_toolWindows[i].Show();
+			{
+				if (_toolWindows[i].Open)
+				{
+					_toolWindows[i].Show();
+				}
+			}
 
 			_sceneGraphWindow.Show(ref ShowSceneGraphWindow);
 			_coreWindow.Show(ref ShowCoreWindow);
