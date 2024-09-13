@@ -6,9 +6,15 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Num = System.Numerics;
 
-
 namespace Nez.ImGuiTools
 {
+	public abstract class ToolWindow
+	{
+		public string Name;
+		public bool Open = true;
+		public abstract void Show();
+	}
+
 	public partial class ImGuiManager : GlobalManager, IFinalRenderDelegate, IDisposable
 	{
 		public bool ShowDemoWindow = false;
@@ -32,7 +38,7 @@ namespace Nez.ImGuiTools
 
 		List<EntityInspector> _entityInspectors = new List<EntityInspector>();
 		List<Action> _drawCommands = new List<Action>();
-		List<Action> _globalWindows = new List<Action>();
+		List<ToolWindow> _toolWindows = new List<ToolWindow>();
 		ImGuiRenderer _renderer;
 
 		Num.Vector2 _gameWindowFirstPosition;
@@ -88,8 +94,8 @@ namespace Nez.ImGuiTools
 			for (var i = _drawCommands.Count - 1; i >= 0; i--)
 				_drawCommands[i]();
 
-			for (var i = _globalWindows.Count - 1; i >= 0; i--)
-				_globalWindows[i]();
+			for (var i = _toolWindows.Count - 1; i >= 0; i--)
+				_toolWindows[i].Show();
 
 			_sceneGraphWindow.Show(ref ShowSceneGraphWindow);
 			_coreWindow.Show(ref ShowCoreWindow);
@@ -210,6 +216,15 @@ namespace Nez.ImGuiTools
 					ImGui.EndMenu();
 				}
 
+				if (ImGui.BeginMenu("Tools"))
+				{
+					foreach (var toolWindow in _toolWindows)
+					{
+						ImGui.MenuItem(toolWindow.Name, null, ref toolWindow.Open);
+					}
+					ImGui.EndMenu();
+				}
+
 				ImGui.EndMainMenuBar();
 			}
 		}
@@ -236,7 +251,7 @@ namespace Nez.ImGuiTools
 		/// registers an Action that will be called and any ImGui drawing can be done in it
 		/// </summary>
 		/// <param name="drawCommand"></param>
-		public void RegisterGlobalWindow(Action drawCommand) => _globalWindows.Add(drawCommand);
+		public void RegisterToolWindow(ToolWindow window) => _toolWindows.Add(window);
 
 		/// <summary>
 		/// removes the Action from the draw commands
