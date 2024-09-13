@@ -32,6 +32,7 @@ namespace Nez.ImGuiTools
 
 		List<EntityInspector> _entityInspectors = new List<EntityInspector>();
 		List<Action> _drawCommands = new List<Action>();
+		List<Action> _globalWindows = new List<Action>();
 		ImGuiRenderer _renderer;
 
 		Num.Vector2 _gameWindowFirstPosition;
@@ -69,7 +70,7 @@ namespace Nez.ImGuiTools
 
 			// find all themes
 			_themes = typeof(NezImGuiThemes).GetMethods(System.Reflection.BindingFlags.Static |
-			                                            System.Reflection.BindingFlags.Public);
+														System.Reflection.BindingFlags.Public);
 		}
 
 		/// <summary>
@@ -86,6 +87,9 @@ namespace Nez.ImGuiTools
 
 			for (var i = _drawCommands.Count - 1; i >= 0; i--)
 				_drawCommands[i]();
+
+			for (var i = _globalWindows.Count - 1; i >= 0; i--)
+				_globalWindows[i]();
 
 			_sceneGraphWindow.Show(ref ShowSceneGraphWindow);
 			_coreWindow.Show(ref ShowCoreWindow);
@@ -131,7 +135,7 @@ namespace Nez.ImGuiTools
 					{
 						if (ImGui.MenuItem(sceneType.Name))
 						{
-							var scene = (Scene) Activator.CreateInstance(sceneType);
+							var scene = (Scene)Activator.CreateInstance(sceneType);
 							Core.StartSceneTransition(new FadeTransition(() => scene));
 						}
 					}
@@ -178,7 +182,7 @@ namespace Nez.ImGuiTools
 						foreach (var pos in Enum.GetNames(typeof(WindowPosition)))
 						{
 							if (ImGui.MenuItem(pos))
-								_gameViewForcedPos = (WindowPosition) Enum.Parse(typeof(WindowPosition), pos);
+								_gameViewForcedPos = (WindowPosition)Enum.Parse(typeof(WindowPosition), pos);
 						}
 
 						ImGui.EndMenu();
@@ -227,6 +231,12 @@ namespace Nez.ImGuiTools
 		/// </summary>
 		/// <param name="drawCommand"></param>
 		public void RegisterDrawCommand(Action drawCommand) => _drawCommands.Add(drawCommand);
+
+		/// <summary>
+		/// registers an Action that will be called and any ImGui drawing can be done in it
+		/// </summary>
+		/// <param name="drawCommand"></param>
+		public void RegisterGlobalWindow(Action drawCommand) => _globalWindows.Add(drawCommand);
 
 		/// <summary>
 		/// removes the Action from the draw commands

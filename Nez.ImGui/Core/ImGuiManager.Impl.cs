@@ -30,6 +30,8 @@ namespace Nez.ImGuiTools
 			BottomRight
 		}
 
+		IFinalRenderDelegate existingRenderDelegate;
+
 		void LoadSettings()
 		{
 			var fileDataStore = Core.Services.GetService<FileDataStore>() ?? new FileDataStore(Nez.Storage.GetStorageRoot());
@@ -269,6 +271,11 @@ namespace Nez.ImGuiTools
 		{
 			if (Core.Scene != null)
 			{
+				if (Core.Scene.FinalRenderDelegate != null)
+				{
+					existingRenderDelegate = Core.Scene.FinalRenderDelegate;
+				}
+
 				Core.Scene.FinalRenderDelegate = this;
 
 				// why call beforeLayout here? If added from the DebugConsole we missed the GlobalManger.update call and ImGui needs NextFrame
@@ -301,6 +308,7 @@ namespace Nez.ImGuiTools
 		                                            RenderTarget2D source, Rectangle finalRenderDestinationRect,
 		                                            SamplerState samplerState)
 		{
+
 			if (ShowSeperateGameWindow)
 			{
 				if (_lastRenderTarget != source)
@@ -327,11 +335,10 @@ namespace Nez.ImGuiTools
 			}
 			else
 			{
-				Core.GraphicsDevice.SetRenderTarget(finalRenderTarget);
-				Core.GraphicsDevice.Clear(letterboxColor);
-				Graphics.Instance.Batcher.Begin(BlendState.Opaque, samplerState, null, null);
-				Graphics.Instance.Batcher.Draw(source, finalRenderDestinationRect, Color.White);
-				Graphics.Instance.Batcher.End();
+				if (existingRenderDelegate != null)
+				{
+					existingRenderDelegate.HandleFinalRender(finalRenderTarget, letterboxColor, source, finalRenderDestinationRect, samplerState);
+				}
 			}
 
 			_renderer.AfterLayout();
@@ -339,14 +346,26 @@ namespace Nez.ImGuiTools
 
 		void IFinalRenderDelegate.OnAddedToScene(Scene scene)
 		{
+			if (existingRenderDelegate != null)
+			{
+				existingRenderDelegate.OnAddedToScene(scene);
+			}
 		}
 
 		void IFinalRenderDelegate.OnSceneBackBufferSizeChanged(int newWidth, int newHeight)
 		{
+			if (existingRenderDelegate != null)
+			{
+				existingRenderDelegate.OnSceneBackBufferSizeChanged(newWidth, newHeight);
+			}
 		}
 
 		void IFinalRenderDelegate.Unload()
 		{
+			if (existingRenderDelegate != null)
+			{
+				existingRenderDelegate.Unload();
+			}
 		}
 
 		#endregion
