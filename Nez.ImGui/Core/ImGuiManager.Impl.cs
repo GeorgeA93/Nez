@@ -339,6 +339,14 @@ namespace Nez.ImGuiTools
 				{
 					existingRenderDelegate.HandleFinalRender(finalRenderTarget, letterboxColor, source, finalRenderDestinationRect, samplerState);
 				}
+				else
+				{
+					Core.GraphicsDevice.SetRenderTarget(finalRenderTarget);
+					Core.GraphicsDevice.Clear(letterboxColor);
+					Graphics.Instance.Batcher.Begin(BlendState.Opaque, samplerState, null, null);
+					Graphics.Instance.Batcher.Draw(source, finalRenderDestinationRect, Color.White);
+					Graphics.Instance.Batcher.End();
+				}
 			}
 
 			_renderer.AfterLayout();
