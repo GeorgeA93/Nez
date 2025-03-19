@@ -62,7 +62,7 @@ namespace Nez
 		/// raw zoom value. This is the exact value used for the scale matrix. Default is 1.
 		/// </summary>
 		/// <value>The raw zoom.</value>
-		[Range(0, 30)]
+		[Range(0, 30, 1)]
 		public float RawZoom
 		{
 			get => _zoom;

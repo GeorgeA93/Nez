@@ -31,5 +31,10 @@ namespace Nez
 			_noiseParam = Parameters["noise"];
 			_noiseParam.SetValue(_noise);
 		}
+
+		public void SetTime(float time)
+		{
+			Parameters["time"].SetValue(time);
+		}
 	}
 }

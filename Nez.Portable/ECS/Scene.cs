@@ -77,7 +77,8 @@ namespace Nez
 			/// like the old TitleSafeArea. Example: if design resolution is 1348x900 and bleed is 148x140 the safe area would be 1200x760 (design
 			/// resolution - bleed).
 			/// </summary>
-			BestFit
+			BestFit,
+			BestFitPixelPerfect,
 		}
 
 
@@ -126,8 +127,7 @@ namespace Nez
 		/// gets the size of the sceneRenderTarget
 		/// </summary>
 		/// <value>The size of the scene render texture.</value>
-		public Point SceneRenderTargetSize =>
-			new Point(_sceneRenderTarget.Bounds.Width, _sceneRenderTarget.Bounds.Height);
+		public Point SceneRenderTargetSize => _sceneRenderTarget.Bounds.Size;
 
 		/// <summary>
 		/// accesses the main scene RenderTarget. Some Renderers that use multiple RenderTargets may need to render into them first and then
@@ -225,7 +225,7 @@ namespace Nez
 		{
 			_defaultDesignResolutionSize = new Point(width, height);
 			_defaultSceneResolutionPolicy = sceneResolutionPolicy;
-			if (_defaultSceneResolutionPolicy == SceneResolutionPolicy.BestFit)
+			if (_defaultSceneResolutionPolicy == SceneResolutionPolicy.BestFit || _defaultSceneResolutionPolicy == SceneResolutionPolicy.BestFitPixelPerfect)
 				_defaultDesignBleedSize = new Point(horizontalBleed, verticalBleed);
 		}
 
@@ -311,6 +311,8 @@ namespace Nez
 			_resolutionPolicy = _defaultSceneResolutionPolicy;
 			_designResolutionSize = _defaultDesignResolutionSize;
 			_designBleedSize = _defaultDesignBleedSize;
+
+			UpdateResolutionScaler();
 
 			Initialize();
 		}
@@ -554,7 +556,7 @@ namespace Nez
 		{
 			_designResolutionSize = new Point(width, height);
 			_resolutionPolicy = sceneResolutionPolicy;
-			if (_resolutionPolicy == SceneResolutionPolicy.BestFit)
+			if (_resolutionPolicy == SceneResolutionPolicy.BestFit || _resolutionPolicy == SceneResolutionPolicy.BestFitPixelPerfect)
 				_designBleedSize = new Point(horizontalBleed, verticalBleed);
 			UpdateResolutionScaler();
 		}
@@ -706,6 +708,28 @@ namespace Nez
 
 					renderTargetWidth = designSize.X;
 					renderTargetHeight = designSize.Y;
+
+					break;
+				case SceneResolutionPolicy.BestFitPixelPerfect:
+					renderTargetWidth = designSize.X;
+					renderTargetHeight = designSize.Y;
+
+					var minimumWidth = designSize.X - _designBleedSize.X;
+					var minimumHeight = designSize.Y - _designBleedSize.Y;
+
+					var pixelPerfectScaleX = Mathf.FloorToInt((float)screenSize.X / minimumWidth);
+					var pixelPerfectScaleY = Mathf.FloorToInt((float)screenSize.Y / minimumHeight);
+
+					PixelPerfectScale = MathHelper.Min(pixelPerfectScaleX, pixelPerfectScaleY);
+
+					if (PixelPerfectScale == 0)
+						PixelPerfectScale = 1;
+
+					_finalRenderDestinationRect.Width = Mathf.CeilToInt(renderTargetWidth * PixelPerfectScale);
+					_finalRenderDestinationRect.Height =  Mathf.CeilToInt(renderTargetHeight * PixelPerfectScale);
+					_finalRenderDestinationRect.X = (screenSize.X - _finalRenderDestinationRect.Width) / 2;
+					_finalRenderDestinationRect.Y = (screenSize.Y - _finalRenderDestinationRect.Height) / 2;
+					rectCalculated = true;
 
 					break;
 			}

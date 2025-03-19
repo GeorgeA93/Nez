@@ -107,6 +107,8 @@ namespace Nez
 			}
 		}
 
+		public bool AlwaysVisible = false;
+
 		public bool DebugRenderEnabled = true;
 
 		protected Vector2 _localOffset;
@@ -177,6 +179,10 @@ namespace Nez
 		/// <param name="camera">Camera.</param>
 		public virtual bool IsVisibleFromCamera(Camera camera)
 		{
+			if (AlwaysVisible)
+			{
+				return true;
+			}
 			IsVisible = camera.Bounds.Intersects(Bounds);
 			return IsVisible;
 		}

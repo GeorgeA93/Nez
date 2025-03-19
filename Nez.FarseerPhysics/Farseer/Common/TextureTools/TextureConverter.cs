@@ -366,7 +366,7 @@ namespace FarseerPhysics.Common.TextureTools
 					detectedPolygons.Add(polygon);
 				}
 
-				if (MultipartDetection || polygon.Count <= 2)
+				if ((MultipartDetection || polygon.Count <= 2) && polygonEntrance.HasValue)
 				{
 					if (SearchNextHullEntrance(detectedPolygons, polygonEntrance.Value, out polygonEntrance))
 						searchOn = true;

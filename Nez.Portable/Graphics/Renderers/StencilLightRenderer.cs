@@ -83,8 +83,8 @@ namespace Nez
 					RenderLight(renderable, cam);
 			}
 
-			if (ShouldDebugRender && Core.DebugRenderEnabled)
-				DebugRender(scene, cam);
+			// if (ShouldDebugRender && Core.DebugRenderEnabled)
+			// 	DebugRender(scene, cam);
 
 			EndRender();
 		}
@@ -146,8 +146,8 @@ namespace Nez
 				if (nDotL > 0)
 				{
 					var midpoint = (nextVertex + vertex) * 0.5f;
-					Debug.DrawLine(vertex, nextVertex, Color.Green);
-					Debug.DrawLine(midpoint, midpoint + normal * 20, Color.Green);
+					// Debug.DrawLine(vertex, nextVertex, Color.Green);
+					// Debug.DrawLine(midpoint, midpoint + normal * 20, Color.Green);
 
 					var point1 = nextVertex + (Vector2.Normalize(nextVertex - lightPos) * Screen.Width);
 					var point2 = vertex + (Vector2.Normalize(vertex - lightPos) * Screen.Width);

@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 
 namespace Nez
@@ -37,11 +38,27 @@ namespace Nez
 			}
 		}
 
+		public Color VignetteColor
+		{
+			get => _vignetteColor;
+			set
+			{
+				if (_vignetteColor != value)
+				{
+					_vignetteColor = value;
+
+					if (Effect != null)
+						_colorParam.SetValue(_vignetteColor.ToVector4());
+				}
+			}
+		}
+
 		float _power = 1f;
 		float _radius = 1.25f;
+		Color _vignetteColor = Color.Black;
 		EffectParameter _powerParam;
 		EffectParameter _radiusParam;
-
+		EffectParameter _colorParam;
 
 		public VignettePostProcessor(int executionOrder) : base(executionOrder)
 		{
@@ -55,8 +72,10 @@ namespace Nez
 
 			_powerParam = Effect.Parameters["_power"];
 			_radiusParam = Effect.Parameters["_radius"];
+			_colorParam = Effect.Parameters["_vignetteColor"];
 			_powerParam.SetValue(_power);
 			_radiusParam.SetValue(_radius);
+			_colorParam.SetValue(_vignetteColor.ToVector4());
 		}
 
 		public override void Unload()

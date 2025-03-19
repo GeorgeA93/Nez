@@ -331,7 +331,7 @@ namespace FarseerPhysics.Common
 		{
 			var data = new uint[sprite.SourceRect.Width * sprite.SourceRect.Height];
 			sprite.Texture2D.GetData(0, sprite.SourceRect, data, 0, data.Length);
-			return TextureConverter.DetectVertices(data, sprite.Texture2D.Width);
+			return TextureConverter.DetectVertices(data, sprite.SourceRect.Width);
 		}
 
 		/// <summary>

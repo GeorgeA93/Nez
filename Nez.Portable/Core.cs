@@ -90,7 +90,7 @@ namespace Nez
 		internal static long drawCalls;
 		TimeSpan _frameCounterElapsedTime = TimeSpan.Zero;
 		int _frameCounter = 0;
-		string _windowTitle;
+		public string _windowTitle;
 #endif
 
 		Scene _scene;

@@ -16,16 +16,7 @@ namespace Nez
 		/// <param name="points">Points.</param>
 		public PolygonCollider(Vector2[] points)
 		{
-			// first and last point must not be the same. we want an open polygon
-			var isPolygonClosed = points[0] == points[points.Length - 1];
-
-			if (isPolygonClosed)
-				Array.Resize(ref points, points.Length - 1);
-
-			var center = Polygon.FindPolygonCenter(points);
-			SetLocalOffset(center);
-			Polygon.RecenterPolygonVerts(points);
-			Shape = new Polygon(points);
+			SetPoints(points);
 		}
 
 		public PolygonCollider(int vertCount, float radius)
@@ -35,6 +26,46 @@ namespace Nez
 
 		public PolygonCollider() : this(6, 40)
 		{
+		}
+
+		public void SetPoints(Vector2[] points)
+		{
+			if(Enabled)
+				UnregisterColliderWithPhysicsSystem();
+
+			// first and last point must not be the same. we want an open polygon
+			var isPolygonClosed = points[0] == points[points.Length - 1];
+
+			if (isPolygonClosed)
+				Array.Resize(ref points, points.Length - 1);
+
+			if (Shape == null)
+			{
+				Shape = new Polygon(points);
+			}
+			else
+			{
+				((Polygon)Shape).SetPoints(points);
+			}
+
+			_isPositionDirty = true;
+			if(Enabled)
+				RegisterColliderWithPhysicsSystem();
+		}
+
+		public void FlipHorizontally()
+		{
+			var points = ((Polygon)Shape).Points;
+			var newPoints = new Vector2[points.Length];
+
+			for (var i = 0; i < points.Length; i ++)
+			{
+				var point = points[i];
+				var newPoint = new Vector2(2 * 0 - point.X, point.Y);
+				newPoints[i] = newPoint;
+			}
+			
+			SetPoints(newPoints);
 		}
 
 		public override void DebugRender(Batcher batcher)

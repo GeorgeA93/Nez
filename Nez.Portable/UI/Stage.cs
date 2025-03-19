@@ -16,6 +16,8 @@ namespace Nez.UI
 		/// </summary>
 		public bool IsFullScreen;
 
+		public bool IsRenderTarget;
+
 		/// <summary>
 		/// the button on the gamepad that activates the focused control
 		/// </summary>
@@ -51,9 +53,21 @@ namespace Nez.UI
 		bool _isGamepadFocusEnabled;
 		IGamepadFocusable _gamepadFocusElement;
 
+		int VirtualWidth, VirtualHeight;
+		bool virtualSize = false;
 
 		public Stage()
 		{
+			root = new Group();
+			root.SetStage(this);
+		}
+
+		public Stage(int virtualWidth, int virtualHeight)
+		{
+			VirtualWidth = virtualWidth;
+			VirtualHeight = virtualHeight;
+			virtualSize = true;
+
 			root = new Group();
 			root.SetStage(this);
 		}
@@ -537,7 +551,11 @@ namespace Nez.UI
 		public float GetWidth()
 		{
 			if (Entity != null && !IsFullScreen)
+			{
+				if (virtualSize)
+					return VirtualWidth;
 				return Entity.Scene.SceneRenderTargetSize.X;
+			}
 
 			return Screen.Width;
 		}
@@ -550,7 +568,12 @@ namespace Nez.UI
 		public float GetHeight()
 		{
 			if (Entity != null && !IsFullScreen)
+			{
+				if (virtualSize)
+					return VirtualHeight;
+
 				return Entity.Scene.SceneRenderTargetSize.Y;
+			}
 
 			return Screen.Height;
 		}

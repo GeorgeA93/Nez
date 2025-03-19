@@ -126,9 +126,9 @@ namespace Nez
 
 		public override void DebugRender(Batcher batcher)
 		{
-			var scale = MathHelper.Max(Entity.Transform.Scale.X, Entity.Transform.Scale.Y);
-			batcher.DrawHollowRect(Bounds, Debug.Colors.RenderableBounds);
-			batcher.DrawCircle(Transform.Position, _radius * scale, Debug.Colors.RenderableBounds);
+			// var scale = MathHelper.Max(Entity.Transform.Scale.X, Entity.Transform.Scale.Y);
+			// batcher.DrawHollowRect(Bounds, Debug.Colors.RenderableBounds);
+			// batcher.DrawCircle(Transform.Position, _radius * scale, Debug.Colors.RenderableBounds);
 		}
 
 		#endregion

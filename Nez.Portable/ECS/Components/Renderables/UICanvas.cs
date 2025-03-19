@@ -1,5 +1,6 @@
 ﻿using Nez.UI;
 using Microsoft.Xna.Framework;
+using Nez.AI.FSM;
 
 
 namespace Nez
@@ -29,6 +30,11 @@ namespace Nez
 		public UICanvas()
 		{
 			Stage = new Stage();
+		}
+
+		public UICanvas(int virtualWidth, int virtualHeight)
+		{
+			Stage = new Stage(virtualWidth, virtualHeight);
 		}
 
 

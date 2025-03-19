@@ -35,6 +35,16 @@ namespace Nez
 		/// </summary>
 		public static Vector2 ResolutionScale => _resolutionScale;
 
+		public static void SetResolutionScale(Vector2 scale)
+		{
+			_resolutionScale = scale;
+		}
+
+		public static void SetResolutionOffset(Point offset)
+		{
+			_resolutionOffset = offset;
+		}
+
 		/// <summary>
 		/// set by the Scene and used to get mouse input from raw screen coordinates to render target coordinates. Any
 		/// SceneResolutionPolicy that can result in letterboxing could potentially have an offset (basically, the
