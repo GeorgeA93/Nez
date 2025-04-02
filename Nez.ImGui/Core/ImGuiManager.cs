@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -257,6 +258,8 @@ namespace Nez.ImGuiTools
 		/// </summary>
 		/// <param name="drawCommand"></param>
 		public void RegisterToolWindow(ToolWindow window) => _toolWindows.Add(window);
+
+		public bool HasToolWindow(string name) => _toolWindows.Where((t) => t.Name == name).Count() > 0;
 
 		/// <summary>
 		/// removes the Action from the draw commands
