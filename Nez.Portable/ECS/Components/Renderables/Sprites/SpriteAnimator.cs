@@ -112,6 +112,11 @@ namespace Nez.Sprites
 		public PingPongLoopStates PingPongLoopState { get; set; }
 		
 		private bool _pingPongOnceAnimationStarted = false;
+
+		public bool HasAnimation(string name)
+		{
+			return Animations.ContainsKey(name);
+		}
 		
 		public SpriteAnimator()
 		{ }
