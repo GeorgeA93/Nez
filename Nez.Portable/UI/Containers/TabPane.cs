@@ -81,6 +81,7 @@ namespace Nez.UI
 				TabButtons[i].ToggleOff();
 
 				CurrentTab = tab;
+				CurrentTab.OnActive();
 			}
 		}
 
@@ -115,6 +116,11 @@ namespace Nez.UI
 			SetBackground(_style.Background);
 			SetFillParent(true);
 			Top().Left();
+		}
+
+		public virtual void OnActive()
+		{
+
 		}
 	}
 
