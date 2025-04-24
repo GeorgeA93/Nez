@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using MonoGame.Framework.Utilities;
 using System;
 using System.Collections.Generic;
 
@@ -42,6 +43,8 @@ namespace Nez.UI
 			Row();
 			Add(_tabTable).Fill().SetExpandY();
 		}
+
+		public Table ButtonsTable => _buttonsTable;
 
 		public void AddTab(Tab tab)
 		{
