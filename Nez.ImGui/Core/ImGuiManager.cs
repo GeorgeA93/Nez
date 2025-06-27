@@ -258,6 +258,7 @@ namespace Nez.ImGuiTools
 		/// </summary>
 		/// <param name="drawCommand"></param>
 		public void RegisterToolWindow(ToolWindow window) => _toolWindows.Add(window);
+		public void DeregisterToolWindow(ToolWindow window) => _toolWindows.Remove(window);
 
 		public bool HasToolWindow(string name) => _toolWindows.Where((t) => t.Name == name).Count() > 0;
 
