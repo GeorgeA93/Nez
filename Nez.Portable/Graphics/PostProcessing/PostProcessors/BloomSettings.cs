@@ -52,6 +52,7 @@ namespace Nez
 			new BloomSettings(0.25f, 8, 1.3f, 1, 1, 0), // Saturated
 			new BloomSettings(0, 2, 1, 0.1f, 1, 1), // Blurry
 			new BloomSettings(0.5f, 2, 1, 1, 1, 1), // Subtle
+			new BloomSettings(0.05f, 8, 0.4f, 1f, 1f, 0.8f), // Terminal
 		};
 	}
 }

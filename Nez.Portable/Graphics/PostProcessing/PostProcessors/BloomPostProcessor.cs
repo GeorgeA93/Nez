@@ -15,6 +15,97 @@ namespace Nez
 			set => SetBloomSettings(value);
 		}
 
+		[Range(0f, 10f)]
+		public float Threshold
+		{
+			get => _settings.Threshold;
+			set
+			{
+				if (_settings.Threshold != value)
+				{
+					var settings = new BloomSettings(value, _settings.BlurAmount, _settings.Intensity, _settings.BaseIntensity,
+						_settings.Saturation, _settings.BaseSaturation);
+					SetBloomSettings(settings);
+				}
+			}
+		}
+
+		[Range(0f, 10f)]
+		public float BlurAmount
+		{
+			get => _settings.BlurAmount;
+			set
+			{
+				if (_settings.BlurAmount != value)
+				{
+					var settings = new BloomSettings(_settings.Threshold, value, _settings.Intensity, _settings.BaseIntensity,
+						_settings.Saturation, _settings.BaseSaturation);
+					SetBloomSettings(settings);
+				}
+			}
+		}
+
+		[Range(0f, 10f)]
+		public float Intensity
+		{
+			get => _settings.Intensity;
+			set
+			{
+				if (_settings.Intensity != value)
+				{
+					var settings = new BloomSettings(_settings.Threshold, _settings.BlurAmount, value, _settings.BaseIntensity,
+						_settings.Saturation, _settings.BaseSaturation);
+					SetBloomSettings(settings);
+				}
+			}
+		}
+
+		[Range(0f, 10f)]
+		public float BaseIntensity
+		{
+			get => _settings.BaseIntensity;
+			set
+			{
+				if (_settings.BaseIntensity != value)
+				{
+					var settings = new BloomSettings(_settings.Threshold, _settings.BlurAmount, _settings.Intensity, value,
+						_settings.Saturation, _settings.BaseSaturation);
+					SetBloomSettings(settings);
+				}
+			}
+		}
+
+		[Range(0f, 10f)]
+		public float Saturation
+		{
+			get => _settings.Saturation;
+			set
+			{
+				if (_settings.Saturation != value)
+				{
+					var settings = new BloomSettings(_settings.Threshold, _settings.BlurAmount, _settings.Intensity, _settings.BaseIntensity,
+						value, _settings.BaseSaturation);
+					SetBloomSettings(settings);
+				}
+			}
+		}
+
+		[Range(0f, 10f)]
+		public float BaseSaturation
+		{
+			get => _settings.BaseSaturation;
+			set
+			{
+				if (_settings.BaseSaturation != value)
+				{
+					var settings = new BloomSettings(_settings.Threshold, _settings.BlurAmount, _settings.Intensity, _settings.BaseIntensity,
+						_settings.Saturation, value);
+					SetBloomSettings(settings);
+				}
+			}
+		}
+
+
 		/// <summary>
 		/// scale of the internal RenderTargets. For high resolution renders a half sized RT is usually more than enough. Defaults to 1.
 		/// </summary>
