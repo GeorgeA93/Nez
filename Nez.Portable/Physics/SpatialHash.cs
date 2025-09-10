@@ -314,7 +314,8 @@ namespace Nez.Spatial
 				return _raycastParser.HitCounter;
 			}
 
-			while (currentCell.X != lastCell.X || currentCell.Y != lastCell.Y)
+			int safety = 10000;
+			while (currentCell.X != lastCell.X || currentCell.Y != lastCell.Y && safety-- > 0)
 			{
 				if (tMaxX < tMaxY)
 				{

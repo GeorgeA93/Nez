@@ -24,6 +24,9 @@ namespace Nez.AI.Pathfinding
 
 		public static bool Search<T>(IAstarGraph<T> graph, T start, T goal, out Dictionary<T, T> cameFrom)
 		{
+			int maxIterations = 2000;
+			int iterations = 0;
+
 			var foundPath = false;
 			cameFrom = new Dictionary<T, T>();
 			cameFrom.Add(start, start);
@@ -36,6 +39,13 @@ namespace Nez.AI.Pathfinding
 
 			while (frontier.Count > 0)
 			{
+				iterations++;
+				if (iterations > maxIterations)
+				{
+					System.Console.WriteLine("AStarPathfinder: max iterations hit, aborting search");
+					break;
+				}
+
 				var current = frontier.Dequeue();
 
 				if (current.Data.Equals(goal))
