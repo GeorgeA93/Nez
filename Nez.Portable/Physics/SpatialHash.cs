@@ -315,7 +315,7 @@ namespace Nez.Spatial
 			}
 
 			int safety = 10000;
-			while (currentCell.X != lastCell.X || currentCell.Y != lastCell.Y && safety-- > 0)
+			while ((currentCell.X != lastCell.X || currentCell.Y != lastCell.Y) && safety-- > 0)
 			{
 				if (tMaxX < tMaxY)
 				{
