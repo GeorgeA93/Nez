@@ -779,7 +779,7 @@ namespace Nez
 			if (_finalRenderDelegate != null)
 				_finalRenderDelegate.OnSceneBackBufferSizeChanged(renderTargetWidth, renderTargetHeight);
 
-			Camera.OnSceneRenderTargetSizeChanged(renderTargetWidth, renderTargetHeight);
+			Camera?.OnSceneRenderTargetSizeChanged(renderTargetWidth, renderTargetHeight);
 		}
 
 		#endregion

@@ -202,6 +202,9 @@ namespace Nez
 		/// </summary>
 		void UpdateBlurEffectDeltas()
 		{
+			if (_scene == null)
+				return;
+
 			var sceneRenderTargetSize = _scene.SceneRenderTargetSize;
 			_gaussianBlurEffect.HorizontalBlurDelta = 1f / (sceneRenderTargetSize.X * _renderTargetScale);
 			_gaussianBlurEffect.VerticalBlurDelta = 1f / (sceneRenderTargetSize.Y * _renderTargetScale);
