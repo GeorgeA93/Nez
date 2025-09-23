@@ -130,6 +130,9 @@ namespace Nez.Textures
 		/// <param name="height">Height.</param>
 		public void Resize(int width, int height)
 		{
+			if (RenderTarget == null)
+				return;
+
 			// no need to resize if we are already the right size
 			if (RenderTarget.Width == width && RenderTarget.Height == height && !RenderTarget.IsDisposed)
 				return;
