@@ -7,6 +7,7 @@ namespace Nez.UI
 	public class Button : Table, IInputListener, IGamepadFocusable
 	{
 		public event Action<bool> OnChanged;
+		public Action<Button> OnFocusCallback;
 		public event Action<Button> OnClicked, OnRightClicked;
 
 		public override float PreferredWidth
@@ -219,6 +220,7 @@ namespace Nez.UI
 		protected virtual void OnFocused()
 		{
 			_mouseOver = true;
+			OnFocusCallback?.Invoke(this);
 		}
 
 
