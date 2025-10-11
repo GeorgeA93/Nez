@@ -87,8 +87,6 @@ namespace Nez.DeferredLighting
 			Material = new DeferredSpriteMaterial(NullNormalMapTexture);
 
 			_lightLayer = lightLayer;
-			Array.Sort(renderLayers);
-			Array.Reverse(renderLayers);
 			RenderLayers = renderLayers;
 
 			_lightEffect = new DeferredLightEffect();

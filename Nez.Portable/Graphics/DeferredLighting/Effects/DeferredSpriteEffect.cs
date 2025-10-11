@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 
 namespace Nez.DeferredLighting
@@ -38,6 +39,8 @@ namespace Nez.DeferredLighting
 		EffectParameter _alphaCutoffParam;
 		EffectParameter _alphaAsSelfIlluminationParam;
 		EffectParameter _selfIlluminationPowerParam;
+		EffectParameter _hitColorParam;
+		EffectParameter _strengthParam;
 
 
 		public DeferredSpriteEffect() : base(Core.GraphicsDevice, EffectResource.DeferredSpriteBytes)
@@ -46,6 +49,8 @@ namespace Nez.DeferredLighting
 			_alphaCutoffParam = Parameters["_alphaCutoff"];
 			_alphaAsSelfIlluminationParam = Parameters["_alphaAsSelfIllumination"];
 			_selfIlluminationPowerParam = Parameters["_selfIlluminationPower"];
+			_hitColorParam = Parameters["HitColor"];
+			_strengthParam = Parameters["Strength"];
 
 			SetAlphaCutoff(0.3f);
 			SetSelfIlluminationPower(1);
@@ -112,6 +117,12 @@ namespace Nez.DeferredLighting
 
 			return this;
 		}
+
+		public void SetHitColor(Color hitColor, float currentStrength)
+        {
+            _hitColorParam.SetValue(hitColor.ToVector3());
+            _strengthParam.SetValue(currentStrength);
+        }
 
 		#endregion
 	}
