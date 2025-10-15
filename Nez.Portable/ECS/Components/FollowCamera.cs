@@ -170,6 +170,9 @@ namespace Nez
 
 		void UpdateFollow()
 		{
+			if (_targetEntity == null)
+				return;
+
 			_desiredPositionDelta.X = _desiredPositionDelta.Y = 0;
 
 			if (_cameraStyle == CameraStyle.LockOn)
