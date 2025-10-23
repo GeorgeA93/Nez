@@ -14,6 +14,13 @@ namespace Nez.Audio
 		float _pitchMin, _pitchMax;
 		bool _useRandomPan;
 		float _panMin, _panMax;
+		float _volume = 1f;
+
+		public AudioSource SetVolume(float volume)
+		{
+			_volume = Mathf.Clamp01(volume);
+			return this;
+		}
 
 
 		/// <summary>
@@ -64,7 +71,7 @@ namespace Nez.Audio
 		{
 			if (_useRandomPitch || _useRandomPan)
 				return _soundEffects.RandomItem()
-					.Play(1, Random.Range(_pitchMin, _pitchMax), Random.Range(_panMin, _panMax));
+					.Play(_volume, Random.Range(_pitchMin, _pitchMax), Random.Range(_panMin, _panMax));
 			else
 				return _soundEffects.RandomItem().Play();
 		}
