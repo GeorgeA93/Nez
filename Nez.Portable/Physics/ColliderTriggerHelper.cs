@@ -43,6 +43,11 @@ namespace Nez
 				if(!collider.Enabled)
 					continue;
 
+				if (collider.Entity == null)
+                {
+					continue;
+                }
+
 				// fetch anything that we might collide with us at our new position
 				var neighbors = Physics.BoxcastBroadphase(collider.Bounds, collider.CollidesWithLayers);
 				foreach (var neighbor in neighbors)
@@ -78,7 +83,12 @@ namespace Nez
 			_previousTriggerIntersections.ExceptWith(_activeTriggerIntersections);
 
 			foreach (var pair in _previousTriggerIntersections)
+            {
+				if (pair.First.Entity == null || pair.Second.Entity == null)
+					continue;
+
 				NotifyTriggerListeners(pair, false);
+            }
 
 			// clear out the previous set cause we are done with it for now
 			_previousTriggerIntersections.Clear();
