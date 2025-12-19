@@ -68,6 +68,21 @@ namespace Nez
 			SetPoints(newPoints);
 		}
 
+		public void FlipVertically()
+		{
+			var points = ((Polygon)Shape).Points;
+			var newPoints = new Vector2[points.Length];
+
+			for (var i = 0; i < points.Length; i ++)
+			{
+				var point = points[i];
+				var newPoint = new Vector2(point.X, 2 * 0 - point.Y);
+				newPoints[i] = newPoint;
+			}
+			
+			SetPoints(newPoints);
+		}
+
 		public override void DebugRender(Batcher batcher)
 		{
 			var poly = Shape as Polygon;
