@@ -73,7 +73,7 @@ namespace Nez.Audio
 				return _soundEffects.RandomItem()
 					.Play(_volume, Random.Range(_pitchMin, _pitchMax), Random.Range(_panMin, _panMax));
 			else
-				return _soundEffects.RandomItem().Play();
+				return _soundEffects.RandomItem().Play(_volume, 0, 0);
 		}
 
 
