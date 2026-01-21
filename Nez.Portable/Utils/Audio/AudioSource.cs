@@ -66,6 +66,15 @@ namespace Nez.Audio
 			return this;
 		}
 
+		public SoundEffectInstance Loop()
+		{
+			var instance = _soundEffects.RandomItem().CreateInstance();
+			instance.IsLooped = true;
+			instance.Volume = _volume;
+			instance.Play();
+			return instance;
+		}
+
 
 		public bool Play()
 		{
