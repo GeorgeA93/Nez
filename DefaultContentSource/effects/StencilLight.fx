@@ -27,14 +27,27 @@ VertexShaderOutput Vert(VertexShaderInput input)
 }
 
 
+// Interleaved gradient noise for dithering - reduces banding artifacts
+float InterleavedGradientNoise(float2 position)
+{
+	float3 magic = float3(0.06711056, 0.00583715, 52.9829189);
+	return frac(magic.z * frac(dot(position, magic.xy)));
+}
+
 float4 Pixel(VertexShaderOutput input, in float2 screenPos:VPOS) : COLOR0
-{   
+{
 	// compute the relative position of the pixel and the distance towards the light
 	float2 position = _lightSource - input.WorldPos;
 	float distance = length(_lightSource - screenPos.xy);
-	
-	float attenuation = saturate(1.0f - distance/_lightRadius);
-	
+
+	// Use smoothstep for perceptually smoother falloff (reduces visible banding)
+	float normalizedDist = saturate(distance / _lightRadius);
+	float attenuation = 1.0f - smoothstep(0.0f, 1.0f, normalizedDist);
+
+	// Apply subtle dithering to break up any remaining banding
+	float dither = (InterleavedGradientNoise(screenPos) - 0.5) / 255.0;
+	attenuation = saturate(attenuation + dither);
+
 	return float4(attenuation, attenuation, attenuation, attenuation) * float4(_lightColor, 1);
 }
 
