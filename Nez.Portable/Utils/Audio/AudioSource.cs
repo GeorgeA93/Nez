@@ -16,6 +16,8 @@ namespace Nez.Audio
 		float _panMin, _panMax;
 		float _volume = 1f;
 
+		public float Volume => _volume;
+
 		public AudioSource SetVolume(float volume)
 		{
 			_volume = Mathf.Clamp01(volume);
