@@ -326,5 +326,48 @@ namespace Nez.Particles
 			particle.Initialize(_emitterConfig, position);
 			_particles.Add(particle);
 		}
+
+		/// <summary>
+		/// Simulates the particle system for a given duration to pre-fill it with particles.
+		/// Call this after the emitter is added to an entity to avoid empty particle systems on load.
+		/// </summary>
+		/// <param name="seconds">How many seconds to simulate</param>
+		/// <param name="stepSize">Time step for each simulation iteration (smaller = more accurate)</param>
+		public void Prewarm(float seconds, float stepSize = 0.016f)
+		{
+			if (!_active)
+				Play();
+
+			var rootPosition = Entity.Transform.Position + _localOffset;
+			var steps = (int)(seconds / stepSize);
+
+			for (var step = 0; step < steps; step++)
+			{
+				// Emit particles
+				if (_emitting && _emitterConfig.EmissionRate > 0)
+				{
+					var rate = 1.0f / _emitterConfig.EmissionRate;
+					if (_particles.Count < _emitterConfig.MaxParticles)
+						_emitCounter += stepSize;
+
+					while (_particles.Count < _emitterConfig.MaxParticles && _emitCounter > rate)
+					{
+						AddParticle(rootPosition);
+						_emitCounter -= rate;
+					}
+				}
+
+				// Update existing particles
+				for (var i = _particles.Count - 1; i >= 0; i--)
+				{
+					var currentParticle = _particles[i];
+					if (currentParticle.UpdatePrewarm(_emitterConfig, ref CollisionConfig, rootPosition, stepSize))
+					{
+						Pool<Particle>.Free(currentParticle);
+						_particles.RemoveAt(i);
+					}
+				}
+			}
+		}
 	}
 }

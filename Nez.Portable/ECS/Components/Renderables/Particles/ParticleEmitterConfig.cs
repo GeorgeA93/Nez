@@ -64,6 +64,26 @@ namespace Nez.Particles
 		// Variance in degrees for rotatePerSecond
 		public float RotatePerSecondVariance;
 
+		/// <summary>
+		/// Horizontal oscillation amplitude in pixels. Creates a swaying side-to-side motion.
+		/// </summary>
+		public float OscillationAmplitude;
+
+		/// <summary>
+		/// Variance for oscillation amplitude
+		/// </summary>
+		public float OscillationAmplitudeVariance;
+
+		/// <summary>
+		/// Oscillation frequency in cycles per second
+		/// </summary>
+		public float OscillationFrequency = 1f;
+
+		/// <summary>
+		/// Variance for oscillation frequency
+		/// </summary>
+		public float OscillationFrequencyVariance;
+
 
 		void IDisposable.Dispose()
 		{

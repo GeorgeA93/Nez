@@ -41,6 +41,11 @@ namespace Nez.Particles
 		// stored at particle creation time and used for lerping the color
 		float _particleLifetime;
 
+		// oscillation/sway properties
+		float _oscillationAmplitude;
+		float _oscillationFrequency;
+		float _oscillationPhase;
+
 		/// <summary>
 		/// flag indicating if this particle has already collided so that we know not to move it in the normal fashion
 		/// </summary>
@@ -133,6 +138,13 @@ namespace Nez.Particles
 			                                emitterConfig.RotationEndVariance * Random.MinusOneToOne());
 			Rotation = startA;
 			_rotationDelta = (endA - startA) / _timeToLive;
+
+			// oscillation/sway
+			_oscillationAmplitude = emitterConfig.OscillationAmplitude +
+			                        emitterConfig.OscillationAmplitudeVariance * Random.MinusOneToOne();
+			_oscillationFrequency = emitterConfig.OscillationFrequency +
+			                        emitterConfig.OscillationFrequencyVariance * Random.MinusOneToOne();
+			_oscillationPhase = Random.NextFloat() * MathHelper.TwoPi; // random starting phase
 		}
 
 
@@ -189,6 +201,14 @@ namespace Nez.Particles
 
 						_velocity = tmp / Time.DeltaTime;
 						Position = Position + tmp;
+
+						// apply oscillation/sway
+						if (_oscillationAmplitude != 0)
+						{
+							var elapsed = _particleLifetime - _timeToLive;
+							var oscillationOffset = Mathf.Sin(_oscillationPhase + elapsed * _oscillationFrequency * MathHelper.TwoPi) * _oscillationAmplitude;
+							Position.X += oscillationOffset * Time.DeltaTime;
+						}
 					}
 				}
 
@@ -281,6 +301,78 @@ namespace Nez.Particles
 			var responseVelocity =
 				-(1.0f + elasticity) * normalVelocityComponent - friction * tangentialVelocityComponent;
 			_velocity += responseVelocity;
+		}
+
+
+		/// <summary>
+		/// Simplified update for prewarming - uses custom deltaTime and skips collision detection
+		/// </summary>
+		public bool UpdatePrewarm(ParticleEmitterConfig emitterConfig, ref ParticleCollisionConfig collisionConfig,
+		                          Vector2 rootPosition, float deltaTime)
+		{
+			_timeToLive -= deltaTime;
+
+			if (_timeToLive > 0)
+			{
+				if (emitterConfig.EmitterType == ParticleEmitterType.Radial)
+				{
+					_angle += _degreesPerSecond * deltaTime;
+					_radius += _radiusDelta * deltaTime;
+
+					Vector2 tmp;
+					tmp.X = -Mathf.Cos(_angle) * _radius;
+					tmp.Y = -Mathf.Sin(_angle) * _radius;
+
+					_velocity = tmp - Position;
+					Position = tmp;
+				}
+				else
+				{
+					Vector2 tmp, radial, tangential;
+					radial = Vector2.Zero;
+
+					if (Position.X != 0 || Position.Y != 0)
+						Vector2.Normalize(ref Position, out radial);
+
+					tangential = radial;
+					radial = radial * _radialAcceleration;
+
+					var newy = tangential.X;
+					tangential.X = -tangential.Y;
+					tangential.Y = newy;
+					tangential = tangential * _tangentialAcceleration;
+
+					tmp = radial + tangential + emitterConfig.Gravity;
+					tmp = tmp * deltaTime;
+					_direction = _direction + tmp;
+					tmp = _direction * deltaTime;
+
+					_velocity = tmp / deltaTime;
+					Position = Position + tmp;
+
+					// apply oscillation/sway
+					if (_oscillationAmplitude != 0)
+					{
+						var elapsed = _particleLifetime - _timeToLive;
+						var oscillationOffset = Mathf.Sin(_oscillationPhase + elapsed * _oscillationFrequency * MathHelper.TwoPi) * _oscillationAmplitude;
+						Position.X += oscillationOffset * deltaTime;
+					}
+				}
+
+				var t = (_particleLifetime - _timeToLive) / _particleLifetime;
+				ColorExt.Lerp(ref _startColor, ref _finishColor, out Color, t);
+
+				ParticleSize += _particleSizeDelta * deltaTime;
+				ParticleSize = MathHelper.Max(0, ParticleSize);
+
+				Rotation += _rotationDelta * deltaTime;
+			}
+			else
+			{
+				return true;
+			}
+
+			return false;
 		}
 	}
 }
