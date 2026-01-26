@@ -198,7 +198,7 @@ namespace Nez
 						return;
 				}
 
-				var targetBounds = _targetEntity.GetComponent<Collider>().Bounds;
+				var targetBounds = _targetCollider.Bounds;
 				if (!_worldSpaceDeadzone.Contains(targetBounds))
 				{
 					// x-axis
@@ -219,6 +219,7 @@ namespace Nez
 		public void Follow(Entity targetEntity, CameraStyle cameraStyle = CameraStyle.CameraWindow, Measurement deadzoneMeasurement = Measurement.ScaledCameraBounds)
 		{
 			_targetEntity = targetEntity;
+			_targetCollider = null;
 			_cameraStyle = cameraStyle;
 			
 			var cameraBounds = Camera.Bounds;
