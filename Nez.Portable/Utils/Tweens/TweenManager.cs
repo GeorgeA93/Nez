@@ -94,6 +94,12 @@ namespace Nez.Tweens
 		/// <param name="tween">Tween.</param>
 		public static void AddTween(ITweenable tween)
 		{
+			// Prevent duplicate additions
+			for (var i = 0; i < _instance._activeTweens.Length; i++)
+			{
+				if (_instance._activeTweens.Buffer[i] == tween)
+					return;
+			}
 			_instance._activeTweens.Add(tween);
 		}
 

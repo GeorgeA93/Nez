@@ -331,8 +331,7 @@ namespace Nez.Tweens
 			_isTimeScaleIndependent = false;
 			_tweenState = TweenState.Complete;
 
-			// TODO: I don't think we should ever flip the flag from _shouldRecycleTween = false without the user's consent. Needs research and some thought
-			//_shouldRecycleTween = true;
+			_shouldRecycleTween = true;
 			_isRelative = false;
 			_easeType = TweenManager.DefaultEaseType;
 

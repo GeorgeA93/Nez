@@ -91,13 +91,6 @@ namespace Nez.Tweens
 
 		protected override void UpdateValue()
 		{
-			// If the transform was destroyed, stop the tween
-			if (_transform == null)
-			{
-				Stop(false);
-				return;
-			}
-
 			// special case for non-relative angle lerps so that they take the shortest possible rotation
 			if ((_targetType == TransformTargetType.RotationDegrees ||
 			     _targetType == TransformTargetType.LocalRotationDegrees) && !_isRelative)
@@ -111,6 +104,7 @@ namespace Nez.Tweens
 		{
 			if (_shouldRecycleTween)
 			{
+				_shouldRecycleTween = false; // Prevent double-recycling
 				_target = null;
 				_nextTween = null;
 				_transform = null;
