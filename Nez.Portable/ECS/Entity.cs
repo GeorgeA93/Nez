@@ -381,6 +381,8 @@ namespace Nez
 		/// </summary>
 		public virtual void OnRemovedFromScene()
 		{
+			Tweens.TweenManager.StopAllTweensWithTarget(Transform, false);
+
 			// if we were destroyed, remove our components. If we were just detached we need to keep our components on the Entity.
 			if (_isDestroyed)
 				Components.RemoveAllComponents();
