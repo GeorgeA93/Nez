@@ -75,6 +75,8 @@ namespace Nez
 			var cam = Camera ?? scene.Camera;
 			BeginRender(cam);
 
+			OnRenderTargetPrepared(cam);
+
 			var renderables = scene.RenderableComponents.ComponentsWithRenderLayer(RenderLayer);
 			for (var i = 0; i < renderables.Length; i++)
 			{
@@ -88,6 +90,12 @@ namespace Nez
 
 			EndRender();
 		}
+
+		/// <summary>
+		/// Called after the render target is cleared but before lights are rendered.
+		/// Override to paint ambient darkness or other base lighting into the light map.
+		/// </summary>
+		protected virtual void OnRenderTargetPrepared(Camera cam) { }
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		void RenderLight(IRenderable renderable, Camera cam)
