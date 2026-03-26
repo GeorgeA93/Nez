@@ -63,6 +63,8 @@ namespace Nez
 		/// </summary>
 		public bool ShouldColliderScaleAndRotateWithTransform = true;
 
+		public bool IgnoreContactDamage = false;
+
 		public virtual RectangleF Bounds
 		{
 			get
