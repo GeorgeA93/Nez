@@ -112,6 +112,7 @@ namespace Nez.Sprites
 		public PingPongLoopStates PingPongLoopState { get; set; }
 		
 		private bool _pingPongOnceAnimationStarted = false;
+		private Dictionary<Tuple<string, int>, Action> OnFrameEnterActions { get; set; } = new Dictionary<Tuple<string, int>, Action>();
 
 		public bool HasAnimation(string name)
 		{
@@ -123,6 +124,12 @@ namespace Nez.Sprites
 
 		public SpriteAnimator(Sprite sprite) => SetSprite(sprite);
 
+		public SpriteAnimator OnFrameEnter(string animationName, int frameIndex, Action action)
+		{
+			OnFrameEnterActions[new Tuple<string, int>(animationName, frameIndex)] = action;
+			return this;
+		}
+
 		public virtual void Update()
 		{
 			if (AnimationState != State.Running || CurrentAnimation == null)
@@ -133,6 +140,12 @@ namespace Nez.Sprites
 			if (ShouldChangeFrame())
 			{
 				NextFrame();
+
+				var key = new Tuple<string, int>(CurrentAnimationName, CurrentFrame);
+				if (OnFrameEnterActions.TryGetValue(key, out var action))
+				{
+					action?.Invoke();
+				}
 			}
 		}
 
