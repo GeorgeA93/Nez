@@ -259,6 +259,24 @@ namespace Nez.Sprites
 			CurrentLoopMode = loopMode;
 			AnimationState = State.Running;
 		}
+
+		public SpriteAnimator PlayAfter(string name, string nextAnimationName, LoopMode loopMode = LoopMode.Loop)
+		{
+			OnAnimationCompletedEvent += (animationName) =>
+			{
+				if (animationName == name)
+				{
+					Play(nextAnimationName, loopMode);
+				}
+			};
+			return this;
+		}
+
+		public void PlayIfNotPlaying(string name, LoopMode loopMode = LoopMode.Loop)
+		{
+			if (!IsAnimationActive(name))
+				Play(name, loopMode);
+		}
 		
 		/// <summary>
 		/// pauses the animator
