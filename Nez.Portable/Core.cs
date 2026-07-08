@@ -43,6 +43,59 @@ namespace Nez
 		public static bool DebugRenderEnabled = false;
 
 		/// <summary>
+		/// when enabled, Update runs the simulation on a fixed-timestep accumulator (FixedTimestep per tick)
+		/// decoupled from the render rate. Requires IsFixedTimeStep = false. The headless/server path never sets this.
+		/// </summary>
+		public static bool UseSubsteppedLoop = false;
+
+		/// <summary>
+		/// simulation tick length used by the substepped loop
+		/// </summary>
+		public static float FixedTimestep = 1f / 60f;
+
+		/// <summary>
+		/// maximum simulation ticks the accumulator may hold; time beyond this is discarded (and logged).
+		/// 30 ticks = 500ms, parity with MonoGame's fixed-step MaxElapsedTime.
+		/// </summary>
+		public static int MaxCatchUpTicks = 30;
+
+		/// <summary>
+		/// frames-per-second ceiling applied after Present when the substepped loop is active and vsync is off.
+		/// 0 disables the limiter. Holds 1ms Windows timer resolution while active — timer resolution is
+		/// per-process since Win10 2004, so the limiter cannot rely on another process having raised it.
+		/// </summary>
+		public static int FrameRateCap
+		{
+			get => _frameRateCap;
+			set
+			{
+				if (_frameRateCap == value)
+					return;
+
+				if (OperatingSystem.IsWindows())
+				{
+					if (value > 0 && _frameRateCap == 0)
+						WinMm.timeBeginPeriod(1);
+					else if (value == 0 && _frameRateCap > 0)
+						WinMm.timeEndPeriod(1);
+				}
+
+				_frameRateCap = value;
+			}
+		}
+
+		static int _frameRateCap;
+
+		static class WinMm
+		{
+			[System.Runtime.InteropServices.DllImport("winmm.dll")]
+			internal static extern uint timeBeginPeriod(uint period);
+
+			[System.Runtime.InteropServices.DllImport("winmm.dll")]
+			internal static extern uint timeEndPeriod(uint period);
+		}
+
+		/// <summary>
 		/// global access to the graphicsDevice
 		/// </summary>
 		public new static GraphicsDevice GraphicsDevice;
@@ -100,9 +153,17 @@ namespace Nez
 		public SceneTransition SceneTransition => _sceneTransition;
 
 		/// <summary>
-		/// used to coalesce GraphicsDeviceReset events
+		/// used to coalesce GraphicsDeviceReset events. Counted down with real frame time (not the
+		/// TimeScale-scaled TimerManager) so the event still fires while the game is paused.
 		/// </summary>
-		ITimer _graphicsDeviceChangeTimer;
+		float _graphicsDeviceChangeCountdown = -1f;
+
+		/// <summary>
+		/// unconsumed time carried between frames by the substepped loop
+		/// </summary>
+		float _tickAccumulator;
+
+		long _nextPresentTimestamp;
 
 		// globally accessible systems
 		FastList<GlobalManager> _globalManagers = new FastList<GlobalManager>();
@@ -206,18 +267,17 @@ namespace Nez
 		protected void OnGraphicsDeviceReset(object sender, EventArgs e)
 		{
 			// we coalese these to avoid spamming events
-			if (_graphicsDeviceChangeTimer != null)
-			{
-				_graphicsDeviceChangeTimer.Reset();
-			}
-			else
-			{
-				_graphicsDeviceChangeTimer = Schedule(0.05f, false, this, t =>
-				{
-					(t.Context as Core)._graphicsDeviceChangeTimer = null;
-					Emitter.Emit(CoreEvents.GraphicsDeviceReset);
-				});
-			}
+			_graphicsDeviceChangeCountdown = 0.05f;
+		}
+
+		void UpdateGraphicsDeviceResetCoalescing(float frameDt)
+		{
+			if (_graphicsDeviceChangeCountdown < 0f)
+				return;
+
+			_graphicsDeviceChangeCountdown -= frameDt;
+			if (_graphicsDeviceChangeCountdown < 0f)
+				Emitter.Emit(CoreEvents.GraphicsDeviceReset);
 		}
 
 
@@ -258,51 +318,42 @@ namespace Nez
 				}
 			}
 
-			// update all our systems and global managers
-			Time.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
-			Input.Update();
+			UpdateGraphicsDeviceResetCoalescing((float)gameTime.ElapsedGameTime.TotalSeconds);
 
-			if (ExitOnEscapeKeypress &&
-				(Input.IsKeyDown(Keys.Escape) || Input.GamePads[0].IsButtonReleased(Buttons.Back)))
+			if (UseSubsteppedLoop)
 			{
-				base.Exit();
-				return;
+				SubsteppedUpdate((float)gameTime.ElapsedGameTime.TotalSeconds);
 			}
-
-			if (_scene != null)
+			else
 			{
-				for (var i = _globalManagers.Length - 1; i >= 0; i--)
+				Time.RenderDeltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+				// update all our systems and global managers
+				Time.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
+				Input.Update();
+
+				if (ExitOnEscapeKeypress &&
+					(Input.IsKeyDown(Keys.Escape) || Input.GamePads[0].IsButtonReleased(Buttons.Back)))
 				{
-					if (_globalManagers.Buffer[i].Enabled)
-						_globalManagers.Buffer[i].Update();
+					base.Exit();
+					return;
 				}
 
-				// read carefully:
-				// - we do not update the Scene while a SceneTransition is happening
-				// 		- unless it is SceneTransition that doesn't change Scenes (no reason not to update)
-				//		- or it is a SceneTransition that has already switched to the new Scene (the new Scene needs to do its thing)
-				if (_sceneTransition == null ||
-					(_sceneTransition != null &&
-					 (!_sceneTransition._loadsNewScene || _sceneTransition._isNewSceneLoaded)))
+				if (_scene != null)
 				{
-					_scene.Update();
+					for (var i = _globalManagers.Length - 1; i >= 0; i--)
+					{
+						if (_globalManagers.Buffer[i].Enabled)
+							_globalManagers.Buffer[i].Update();
+					}
+
+					UpdateSceneAndHandleSceneChange();
 				}
 
-				if (_nextScene != null)
+				if (!Headless)
 				{
-					_scene.End();
-
-					_scene = _nextScene;
-					_nextScene = null;
-					OnSceneChanged();
-
-					_scene.Begin();
+					EndDebugUpdate();
 				}
-			}
-
-			if (!Headless)
-			{
-				EndDebugUpdate();
 			}
 
 #if FNA
@@ -310,6 +361,115 @@ namespace Nez
 			// Update called though so we do so here.
 			FrameworkDispatcher.Update();
 #endif
+		}
+
+		void SubsteppedUpdate(float frameDt)
+		{
+			Time.RenderDeltaTime = frameDt;
+
+			var maxAccumulator = FixedTimestep * MaxCatchUpTicks;
+			_tickAccumulator += frameDt;
+			if (_tickAccumulator > maxAccumulator)
+			{
+				Debug.Warn("substepped loop dropped {0:0.0}ms of sim time (frame dt {1:0.0}ms)",
+					(_tickAccumulator - maxAccumulator) * 1000f, frameDt * 1000f);
+				_tickAccumulator = maxAccumulator;
+			}
+
+			// frame-mode managers run exactly once per rendered frame, BEFORE the tick loop: ImGui builds its
+			// draw list and intercepts input here, which must precede any scene tick consuming that input
+			if (_scene != null)
+			{
+				for (var i = _globalManagers.Length - 1; i >= 0; i--)
+				{
+					var manager = _globalManagers.Buffer[i];
+					if (manager.Enabled && manager.UpdateMode == GlobalManagerUpdateMode.Frame)
+						manager.Update();
+				}
+			}
+
+			while (_tickAccumulator >= FixedTimestep)
+			{
+				_tickAccumulator -= FixedTimestep;
+
+				Time.Update(FixedTimestep);
+				Input.Update();
+
+				if (ExitOnEscapeKeypress &&
+					(Input.IsKeyDown(Keys.Escape) || Input.GamePads[0].IsButtonReleased(Buttons.Back)))
+				{
+					base.Exit();
+					return;
+				}
+
+				if (_scene != null)
+				{
+					for (var i = _globalManagers.Length - 1; i >= 0; i--)
+					{
+						var manager = _globalManagers.Buffer[i];
+						if (manager.Enabled && manager.UpdateMode == GlobalManagerUpdateMode.Tick)
+							manager.Update();
+					}
+
+					var sceneChanged = UpdateSceneAndHandleSceneChange();
+					if (sceneChanged)
+					{
+						// scene load + GC can take hundreds of ms; starting the new scene with a catch-up
+						// burst would replay that stall as sim ticks
+						_tickAccumulator = 0f;
+						break;
+					}
+
+					// snapshot AFTER all movement for this tick
+					_scene.Interpolator?.OnTickEnd();
+				}
+
+				OnTickUpdate();
+
+				if (!Headless)
+				{
+					EndDebugUpdate();
+				}
+			}
+
+			Time.RenderAlpha = _tickAccumulator / FixedTimestep;
+		}
+
+		bool UpdateSceneAndHandleSceneChange()
+		{
+			// read carefully:
+			// - we do not update the Scene while a SceneTransition is happening
+			// 		- unless it is SceneTransition that doesn't change Scenes (no reason not to update)
+			//		- or it is a SceneTransition that has already switched to the new Scene (the new Scene needs to do its thing)
+			if (_sceneTransition == null ||
+				(_sceneTransition != null &&
+				 (!_sceneTransition._loadsNewScene || _sceneTransition._isNewSceneLoaded)))
+			{
+				_scene.Update();
+			}
+
+			if (_nextScene != null)
+			{
+				_scene.End();
+
+				_scene = _nextScene;
+				_nextScene = null;
+				OnSceneChanged();
+
+				_scene.Begin();
+				return true;
+			}
+
+			return false;
+		}
+
+		/// <summary>
+		/// called at the end of every simulation tick when the substepped loop is active. Input edges
+		/// (IsKeyPressed etc.) are only valid inside a tick — override this instead of checking them after
+		/// base.Update, where multi-tick frames have already consumed them and zero-tick frames re-fire them.
+		/// </summary>
+		protected virtual void OnTickUpdate()
+		{
 		}
 
 		protected override void Draw(GameTime gameTime)
@@ -320,6 +480,10 @@ namespace Nez
 				return;
 
 			StartDebugDraw(gameTime.ElapsedGameTime);
+
+			// fetched at draw time, never cached — the scene can change between frames
+			var interpolator = _scene?.Interpolator;
+			interpolator?.Apply(Time.RenderAlpha);
 
 			if (_sceneTransition != null)
 				_sceneTransition.PreRender(Graphics.Instance.Batcher);
@@ -355,12 +519,52 @@ namespace Nez
 				_scene.PostRender();
 			}
 
+			// transforms must be back at their exact tick values before the next tick runs
+			interpolator?.Restore();
+
 			EndDebugDraw();
+		}
+
+		protected override void EndDraw()
+		{
+			// base.EndDraw is exactly Platform.Present — nothing else happens after it in the frame
+			base.EndDraw();
+
+			var cap = _frameRateCap;
+			if (!UseSubsteppedLoop || cap <= 0)
+				return;
+
+			var ticksPerFrame = Stopwatch.Frequency / cap;
+			var now = Stopwatch.GetTimestamp();
+			if (_nextPresentTimestamp < now - ticksPerFrame || _nextPresentTimestamp == 0)
+				_nextPresentTimestamp = now;
+
+			// Sleep(1) wakes in ~1.5-2ms even at 1ms timer resolution, so sleep only while there is
+			// comfortably more than that left and spin the remainder
+			var sleepGuardTicks = Stopwatch.Frequency / 400;
+			while (true)
+			{
+				now = Stopwatch.GetTimestamp();
+				var remaining = _nextPresentTimestamp - now;
+				if (remaining <= 0)
+					break;
+
+				if (remaining > sleepGuardTicks)
+					System.Threading.Thread.Sleep(1);
+				else
+					System.Threading.Thread.SpinWait(32);
+			}
+
+			_nextPresentTimestamp += ticksPerFrame;
 		}
 
 		protected override void OnExiting(object sender, ExitingEventArgs args)
 		{
 			base.OnExiting(sender, args);
+
+			if (OperatingSystem.IsWindows() && _frameRateCap > 0)
+				WinMm.timeEndPeriod(1);
+
 			Emitter.Emit(CoreEvents.Exiting);
 		}
 

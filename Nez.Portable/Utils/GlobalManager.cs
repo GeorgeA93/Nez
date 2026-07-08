@@ -1,7 +1,26 @@
 ﻿namespace Nez
 {
+	public enum GlobalManagerUpdateMode
+	{
+		/// <summary>
+		/// updated once per simulation tick, inside the substepped loop (gameplay time)
+		/// </summary>
+		Tick,
+
+		/// <summary>
+		/// updated exactly once per rendered frame, before the tick loop (presentation time)
+		/// </summary>
+		Frame
+	}
+
 	public class GlobalManager
 	{
+		/// <summary>
+		/// controls whether this manager updates per simulation tick or per rendered frame when
+		/// Core.UseSubsteppedLoop is enabled. With the substepped loop disabled the two are equivalent.
+		/// </summary>
+		public virtual GlobalManagerUpdateMode UpdateMode => GlobalManagerUpdateMode.Tick;
+
 		/// <summary>
 		/// true if the GlobalManager is enabled. Changes in state result in OnEnabled/OnDisable being called.
 		/// </summary>

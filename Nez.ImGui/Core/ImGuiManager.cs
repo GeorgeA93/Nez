@@ -18,6 +18,10 @@ namespace Nez.ImGuiTools
 
 	public partial class ImGuiManager : GlobalManager, IFinalRenderDelegate, IDisposable
 	{
+		// layout (NewFrame) must pair 1:1 with the AfterLayout render inside scene PostRender, so this manager
+		// updates exactly once per rendered frame, never per simulation tick
+		public override GlobalManagerUpdateMode UpdateMode => GlobalManagerUpdateMode.Frame;
+
 		public bool ShowDemoWindow = false;
 		public bool ShowStyleEditor = false;
 		public bool ShowSceneGraphWindow = true;

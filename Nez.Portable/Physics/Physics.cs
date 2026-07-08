@@ -25,6 +25,13 @@ namespace Nez
 		public static int SpatialHashCellSize = 100;
 
 		/// <summary>
+		/// while true, Collider transform changes skip the spatial hash re-registration. Set only inside the
+		/// render interpolator's Apply/Restore bracket — those transform writes are visual and must never
+		/// reach the physics broadphase.
+		/// </summary>
+		public static bool SuspendColliderUpdates = false;
+
+		/// <summary>
 		/// Do raycasts detect Colliders configured as triggers?
 		/// </summary>
 		public static bool RaycastsHitTriggers = false;

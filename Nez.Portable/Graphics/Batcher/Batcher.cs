@@ -19,7 +19,8 @@ namespace Nez
 		public Matrix TransformMatrix => _transformMatrix;
 
 		/// <summary>
-		/// If true, destination positions will be rounded before being drawn.
+		/// If true, destination positions will be rounded before being drawn. Rounding happens in screen space
+		/// (post transform matrix) so sub-pixel world positions still produce smooth, pixel-aligned motion.
 		/// </summary>
 		public bool ShouldRoundDestinations = true;
 
@@ -27,6 +28,11 @@ namespace Nez
 		#region variables
 
 		bool _shouldIgnoreRoundingDestinations;
+
+		// cached per-Begin data for screen-space rounding: true when the transform has a non-identity
+		// linear part, in which case destinations are rounded post-transform via the cached 2x2 inverse
+		bool _roundInScreenSpace;
+		float _roundInv11, _roundInv12, _roundInv21, _roundInv22;
 
 		// Buffer objects used for actual drawing
 		DynamicVertexBuffer _vertexBuffer;
@@ -244,8 +250,51 @@ namespace Nez
 			_transformMatrix = transformationMatrix;
 			_disableBatching = disableBatching;
 
+			UpdateRoundingTransform();
+
 			if (_disableBatching)
 				PrepRenderState();
+		}
+
+		void UpdateRoundingTransform()
+		{
+			var m11 = _transformMatrix.M11;
+			var m12 = _transformMatrix.M12;
+			var m21 = _transformMatrix.M21;
+			var m22 = _transformMatrix.M22;
+
+			var det = m11 * m22 - m12 * m21;
+			if ((m11 == 1f && m12 == 0f && m21 == 0f && m22 == 1f) || Math.Abs(det) < 1e-6f)
+			{
+				_roundInScreenSpace = false;
+				return;
+			}
+
+			var invDet = 1f / det;
+			_roundInv11 = m22 * invDet;
+			_roundInv12 = -m12 * invDet;
+			_roundInv21 = -m21 * invDet;
+			_roundInv22 = m11 * invDet;
+			_roundInScreenSpace = true;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		void RoundDestination(ref float destinationX, ref float destinationY)
+		{
+			if (_roundInScreenSpace)
+			{
+				var screenX = destinationX * _transformMatrix.M11 + destinationY * _transformMatrix.M21 + _transformMatrix.M41;
+				var screenY = destinationX * _transformMatrix.M12 + destinationY * _transformMatrix.M22 + _transformMatrix.M42;
+				var deltaX = Mathf.Round(screenX) - screenX;
+				var deltaY = Mathf.Round(screenY) - screenY;
+				destinationX += deltaX * _roundInv11 + deltaY * _roundInv21;
+				destinationY += deltaX * _roundInv12 + deltaY * _roundInv22;
+			}
+			else
+			{
+				destinationX = Mathf.Round(destinationX);
+				destinationY = Mathf.Round(destinationY);
+			}
 		}
 
 		public void End()
@@ -674,10 +723,7 @@ namespace Nez
 				FlushBatch();
 
 			if (!_shouldIgnoreRoundingDestinations && ShouldRoundDestinations)
-			{
-				destinationX = Mathf.Round(destinationX);
-				destinationY = Mathf.Round(destinationY);
-			}
+				RoundDestination(ref destinationX, ref destinationY);
 
 			// Source/Destination/Origin Calculations
 			float sourceX, sourceY, sourceW, sourceH;
@@ -853,10 +899,7 @@ namespace Nez
 				FlushBatch();
 
 			if (!_shouldIgnoreRoundingDestinations && ShouldRoundDestinations)
-			{
-				destinationX = Mathf.Round(destinationX);
-				destinationY = Mathf.Round(destinationY);
-			}
+				RoundDestination(ref destinationX, ref destinationY);
 
 			// Source/Destination/Origin Calculations. destinationW/H is the scale value so we multiply by the size of the texture region
 			var originX = (origin.X / sprite.Uvs.Width) / sprite.Texture2D.Width;

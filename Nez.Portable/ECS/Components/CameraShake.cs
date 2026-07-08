@@ -6,6 +6,11 @@ namespace Nez
 {
 	public class CameraShake : Component, IUpdatable
 	{
+		/// <summary>
+		/// the offset added to the camera position by this tick's Update; zero while inactive
+		/// </summary>
+		public Vector2 CurrentOffset => Enabled ? _shakeOffset : Vector2.Zero;
+
 		Vector2 _shakeDirection;
 		Vector2 _shakeOffset;
 		float _shakeIntensity = 0f;

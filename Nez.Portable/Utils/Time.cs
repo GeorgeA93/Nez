@@ -44,9 +44,22 @@ namespace Nez
 		public static float AltTimeScale = 1f;
 
 		/// <summary>
-		/// total number of frames that have passed
+		/// total number of simulation ticks that have passed. Under the substepped loop this advances per tick,
+		/// not per rendered frame — never key draw-side logic to it.
 		/// </summary>
 		public static uint FrameCount;
+
+		/// <summary>
+		/// real time elapsed since the previous rendered frame. Unlike DeltaTime this tracks the render rate,
+		/// not the simulation tick. Use for purely visual, draw-path animation.
+		/// </summary>
+		public static float RenderDeltaTime;
+
+		/// <summary>
+		/// fraction [0,1) of the way from the last completed simulation tick to the next one at render time.
+		/// Only meaningful when Core.UseSubsteppedLoop is enabled; 0 otherwise.
+		/// </summary>
+		public static float RenderAlpha;
 
 		/// <summary>
 		/// Maximum value that DeltaTime can be. This can be useful to prevent physics from breaking when dragging

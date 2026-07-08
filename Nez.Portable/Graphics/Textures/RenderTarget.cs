@@ -6,6 +6,12 @@ namespace Nez.Textures
 {
 	public class RenderTarget : GlobalManager
 	{
+		// temporary RTs are acquired/released during Draw, so pool expiry must count rendered frames,
+		// not simulation ticks (Time.FrameCount) — under the substepped loop the two diverge
+		public override GlobalManagerUpdateMode UpdateMode => GlobalManagerUpdateMode.Frame;
+
+		uint _renderFrameCount;
+
 		/// <summary>
 		/// internal class with additional lastFrameUsed field for managing temporary RenderTargets
 		/// </summary>
@@ -95,7 +101,7 @@ namespace Nez.Textures
 				"Attempted to release a temporary RenderTarget2D that is not managed by the system");
 
 			var trackedRT = renderTarget as TrackedRenderTarget2D;
-			trackedRT.LastFrameUsed = Time.FrameCount;
+			trackedRT.LastFrameUsed = instance._renderFrameCount;
 			instance._renderTargetPool.Add(trackedRT);
 		}
 
@@ -164,10 +170,12 @@ namespace Nez.Textures
 
 		public override void Update()
 		{
+			_renderFrameCount++;
+
 			// remove any TrackedRenderTarget2Ds that havent been used for 2 frames or more
 			for (var i = _renderTargetPool.Count - 1; i >= 0; i--)
 			{
-				if (_renderTargetPool[i].LastFrameUsed + 2 < Time.FrameCount)
+				if (_renderTargetPool[i].LastFrameUsed + 2 < _renderFrameCount)
 				{
 					_renderTargetPool[i].Dispose();
 					_renderTargetPool.RemoveAt(i);

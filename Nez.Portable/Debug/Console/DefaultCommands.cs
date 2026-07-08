@@ -96,7 +96,12 @@ namespace Nez.Console
 		[Command("vsync", "Enables or disables vertical sync")]
 		static void Vsync(bool enabled = true)
 		{
+			// the GDM property is only a preference; the swap interval changes on ApplyChanges. Sync the
+			// preferred size to the current window first or ApplyChanges snaps a user-resized window back.
+			Screen.PreferredBackBufferWidth = Screen.Width;
+			Screen.PreferredBackBufferHeight = Screen.Height;
 			Screen.SynchronizeWithVerticalRetrace = enabled;
+			Screen.ApplyChanges();
 			Instance.Log("Vertical Sync " + (enabled ? "Enabled" : "Disabled"));
 		}
 

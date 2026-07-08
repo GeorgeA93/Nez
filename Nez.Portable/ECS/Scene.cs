@@ -88,6 +88,12 @@ namespace Nez
 		public Camera Camera;
 
 		/// <summary>
+		/// optional render interpolator used by the substepped loop. Owned by the Scene; null disables
+		/// interpolation for this Scene entirely.
+		/// </summary>
+		public ISceneRenderInterpolator Interpolator;
+
+		/// <summary>
 		/// clear color that is used in preRender to clear the screen
 		/// </summary>
 		public Color ClearColor = Color.CornflowerBlue;

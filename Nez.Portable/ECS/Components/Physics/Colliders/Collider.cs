@@ -215,7 +215,7 @@ namespace Nez
 					break;
 			}
 
-			if (_isColliderRegistered)
+			if (_isColliderRegistered && !Physics.SuspendColliderUpdates)
 				Physics.UpdateCollider(this);
 		}
 

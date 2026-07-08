@@ -285,7 +285,7 @@ namespace Nez.ImGuiTools
 
 				// why call beforeLayout here? If added from the DebugConsole we missed the GlobalManger.update call and ImGui needs NextFrame
 				// called or it fails. Calling NextFrame twice in a frame causes no harm, just missed input.
-				_renderer.BeforeLayout(Time.DeltaTime);
+				_renderer.BeforeLayout(Time.RenderDeltaTime);
 			}
 		}
 
@@ -300,7 +300,7 @@ namespace Nez.ImGuiTools
 		{
 			// we have to do our layout in update so that if the game window is not focused or being displayed we can wipe
 			// the Input, essentially letting ImGui consume it
-			_renderer.BeforeLayout(Time.DeltaTime);
+			_renderer.BeforeLayout(Time.RenderDeltaTime);
 			LayoutGui();
 		}
 

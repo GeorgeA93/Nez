@@ -138,7 +138,7 @@ namespace Nez
 					break;
 			}
 
-			Duration -= Time.DeltaTime;
+			Duration -= Time.RenderDeltaTime;
 
 			return Duration < 0f;
 		}

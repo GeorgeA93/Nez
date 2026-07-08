@@ -52,6 +52,18 @@ namespace Nez
 		public uint UpdateInterval = 1;
 
 		/// <summary>
+		/// per-tick transform snapshots managed by the scene's ISceneRenderInterpolator; not valid unless the
+		/// tick stamp matches the interpolator's last completed tick
+		/// </summary>
+		public Vector2 InterpolationPrevPosition;
+		public Vector2 InterpolationCurrPosition;
+		public float InterpolationPrevRotation;
+		public float InterpolationCurrRotation;
+		public Vector2 InterpolationTickPosition;
+		public float InterpolationTickRotation;
+		public uint InterpolationSnapshotTick;
+
+		/// <summary>
 		/// enables/disables the Entity. When disabled colliders are removed from the Physics system and components methods will not be called
 		/// </summary>
 		public bool Enabled
