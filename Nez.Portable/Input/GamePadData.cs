@@ -86,7 +86,12 @@ namespace Nez
 		/// <returns><c>true</c>, if previous state does not equal current state, <c>false</c> otherwise.</returns>
 		public bool HasGamepadStateChanged()
 		{
-			return PreviousState != CurrentState;
+			// ignore PacketNumber: SDL bumps it on sub-deadzone axis jitter, so full
+			// GamePadState equality reports phantom changes on an untouched pad
+			return PreviousState.Buttons != CurrentState.Buttons
+				|| PreviousState.DPad != CurrentState.DPad
+				|| PreviousState.ThumbSticks != CurrentState.ThumbSticks
+				|| PreviousState.Triggers != CurrentState.Triggers;
 		}
 
 
