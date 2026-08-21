@@ -37,7 +37,7 @@ namespace Nez.Sprites
 			/// </summary>
 			PingPongOnce
 		}
-		
+
 		public enum State
 		{
 			None,
@@ -51,7 +51,7 @@ namespace Nez.Sprites
 			Ping,
 			Pong
 		}
-		
+
 		/// <summary>
 		/// fired when an animation completes, includes the animation name;
 		/// </summary>
@@ -81,7 +81,7 @@ namespace Nez.Sprites
 		/// index of the current frame in sprite array of the current animation
 		/// </summary>
 		public int CurrentFrame { get; set; }
-		
+
 		/// <summary>
 		/// amount of frames in the current animation
 		/// </summary>
@@ -91,11 +91,11 @@ namespace Nez.Sprites
 		/// returns the total elapsed time of the animation.
 		/// </summary>
 		public float CurrentElapsedTime { get; private set; }
-		
+
 		/// <summary>
 		/// Provides access to list of available animations
 		/// </summary>
-		public Dictionary<string, SpriteAnimation> Animations { get; private set; } 
+		public Dictionary<string, SpriteAnimation> Animations { get; private set; }
 			= new Dictionary<string, SpriteAnimation>();
 
 		/// <summary>
@@ -103,14 +103,14 @@ namespace Nez.Sprites
 		/// It can have 5 different values: Loop, Once, ClampForever, PingPong and PingPongOnce. Defaults to Loop.
 		/// </summary>
 		public LoopMode CurrentLoopMode { get; private set; }
-		
+
 		/// <summary>
 		/// The amount of seconds remaining in the current frame
 		/// </summary>
 		public float FrameTimeLeft { get; private set; }
 
 		public PingPongLoopStates PingPongLoopState { get; set; }
-		
+
 		private bool _pingPongOnceAnimationStarted = false;
 		private Dictionary<Tuple<string, int>, Action> OnFrameEnterActions { get; set; } = new Dictionary<Tuple<string, int>, Action>();
 
@@ -118,7 +118,7 @@ namespace Nez.Sprites
 		{
 			return Animations.ContainsKey(name);
 		}
-		
+
 		public SpriteAnimator()
 		{ }
 
@@ -140,7 +140,6 @@ namespace Nez.Sprites
 			if (ShouldChangeFrame())
 			{
 				NextFrame();
-
 				var key = new Tuple<string, int>(CurrentAnimationName, CurrentFrame);
 				if (OnFrameEnterActions.TryGetValue(key, out var action))
 				{
@@ -156,7 +155,7 @@ namespace Nez.Sprites
 				case LoopMode.Loop:
 					SetFrame((CurrentFrame + 1) % FrameCount);
 					break;
-				
+
 				case LoopMode.Once:
 				case LoopMode.ClampForever:
 					var newFrame = CurrentFrame + 1;
@@ -169,13 +168,13 @@ namespace Nez.Sprites
 						SetFrame(newFrame);
 					}
 					break;
-				
+
 				case LoopMode.PingPong:
 					if (FrameCount == 1)
 					{
 						break;
 					}
-					
+
 					switch (PingPongLoopState)
 					{
 						case PingPongLoopStates.Ping:
@@ -204,7 +203,7 @@ namespace Nez.Sprites
 					break;
 			}
 		}
-		
+
 		/// <summary>
 		/// adds all the animations from the SpriteAtlas
 		/// </summary>
@@ -234,12 +233,12 @@ namespace Nez.Sprites
 			AddAnimation(name, new SpriteAnimation(sprites, fps));
 			return this;
 		}
-		
+
 		/// <summary>
 		/// checks to see if the animation is playing (i.e. the animation is active. it may still be in the paused state)
 		/// </summary>
 		public bool IsAnimationActive(string name) => CurrentAnimation != null && CurrentAnimationName.Equals(name);
-		
+
 		/// <summary>
 		/// checks to see if the CurrentAnimation is running
 		/// </summary>
@@ -253,11 +252,17 @@ namespace Nez.Sprites
 			CurrentAnimation = Animations[name];
 			CurrentAnimationName = name;
 			FrameCount = CurrentAnimation.FrameRates.Length;
-			
+
 			SetFrame(0);
 
 			CurrentLoopMode = loopMode;
 			AnimationState = State.Running;
+
+			var key = new Tuple<string, int>(CurrentAnimationName, CurrentFrame);
+			if (OnFrameEnterActions.TryGetValue(key, out var action))
+			{
+				action?.Invoke();
+			}
 		}
 
 		public SpriteAnimator PlayAfter(string name, string nextAnimationName, LoopMode loopMode = LoopMode.Loop)
@@ -277,7 +282,7 @@ namespace Nez.Sprites
 			if (!IsAnimationActive(name))
 				Play(name, loopMode);
 		}
-		
+
 		/// <summary>
 		/// pauses the animator
 		/// </summary>
@@ -324,12 +329,12 @@ namespace Nez.Sprites
 
 			PingPongLoopState = PingPongLoopStates.Ping;
 			_pingPongOnceAnimationStarted = false;
-			
+
 			CurrentElapsedTime = 0;
 			AnimationState = State.Completed;
 			OnAnimationCompletedEvent?.Invoke(CurrentAnimationName);
 		}
-		
+
 		/// <summary>
 		/// Checks if it needs to change the current animation frame
 		/// </summary>
@@ -338,7 +343,7 @@ namespace Nez.Sprites
 		{
 			return FrameTimeLeft <= 0;
 		}
-		
+
 		/// <summary>
 		/// Converts an animation frame rate (1/60s) to seconds
 		/// </summary>
@@ -361,7 +366,7 @@ namespace Nez.Sprites
 					break;
 			}
 		}
-		
+
 		private void ParsePingLoop()
 		{
 			var newFrame = CurrentFrame + 1;
@@ -375,7 +380,7 @@ namespace Nez.Sprites
 				SetFrame(newFrame);
 			}
 		}
-		
+
 		private void ParsePongLoop()
 		{
 			var newFrame = CurrentFrame - 1;
